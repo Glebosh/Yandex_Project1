@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>983</width>
-    <height>707</height>
+    <width>1017</width>
+    <height>790</height>
    </rect>
   </property>
   <property name="font">
@@ -26,18 +26,18 @@
    <widget class="QComboBox" name="comboBox">
     <property name="geometry">
      <rect>
-      <x>730</x>
+      <x>760</x>
       <y>130</y>
       <width>161</width>
       <height>21</height>
      </rect>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton">
+   <widget class="QPushButton" name="btn_find1">
     <property name="geometry">
      <rect>
-      <x>770</x>
-      <y>450</y>
+      <x>800</x>
+      <y>420</y>
       <width>81</width>
       <height>31</height>
      </rect>
@@ -55,7 +55,7 @@
    <widget class="QTableWidget" name="tableWidget">
     <property name="geometry">
      <rect>
-      <x>30</x>
+      <x>60</x>
       <y>120</y>
       <width>561</width>
       <height>401</height>
@@ -65,7 +65,7 @@
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
-      <x>750</x>
+      <x>780</x>
       <y>90</y>
       <width>131</width>
       <height>16</height>
@@ -85,7 +85,7 @@
    <widget class="QLabel" name="label_2">
     <property name="geometry">
      <rect>
-      <x>770</x>
+      <x>800</x>
       <y>180</y>
       <width>91</width>
       <height>16</height>
@@ -105,7 +105,7 @@
    <widget class="QWidget" name="formLayoutWidget">
     <property name="geometry">
      <rect>
-      <x>730</x>
+      <x>760</x>
       <y>220</y>
       <width>161</width>
       <height>80</height>
@@ -168,7 +168,7 @@
    <widget class="QLabel" name="label_6">
     <property name="geometry">
      <rect>
-      <x>760</x>
+      <x>790</x>
       <y>330</y>
       <width>111</width>
       <height>16</height>
@@ -188,56 +188,18 @@
    <widget class="QLineEdit" name="linek">
     <property name="geometry">
      <rect>
-      <x>750</x>
+      <x>780</x>
       <y>370</y>
       <width>121</width>
       <height>20</height>
      </rect>
     </property>
    </widget>
-   <widget class="QLabel" name="label_7">
-    <property name="geometry">
-     <rect>
-      <x>260</x>
-      <y>70</y>
-      <width>141</width>
-      <height>21</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>14</pointsize>
-     </font>
-    </property>
-    <property name="text">
-     <string>Таблица Блюд</string>
-    </property>
-   </widget>
-   <widget class="QFrame" name="frame">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>110</y>
-      <width>581</width>
-      <height>421</height>
-     </rect>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">background-color: rgb(253, 255, 231);
-border-color: rgb(0, 0, 0);</string>
-    </property>
-    <property name="frameShape">
-     <enum>QFrame::StyledPanel</enum>
-    </property>
-    <property name="frameShadow">
-     <enum>QFrame::Raised</enum>
-    </property>
-   </widget>
    <widget class="QPushButton" name="btn_add">
     <property name="geometry">
      <rect>
-      <x>40</x>
-      <y>580</y>
+      <x>100</x>
+      <y>610</y>
       <width>111</width>
       <height>31</height>
      </rect>
@@ -246,24 +208,374 @@ border-color: rgb(0, 0, 0);</string>
      <string>Добавить блюдо</string>
     </property>
    </widget>
-   <zorder>frame</zorder>
+   <widget class="QPushButton" name="btn_del">
+    <property name="geometry">
+     <rect>
+      <x>250</x>
+      <y>610</y>
+      <width>111</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Удалить блюдо</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_9">
+    <property name="geometry">
+     <rect>
+      <x>740</x>
+      <y>50</y>
+      <width>211</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Times New Roman</family>
+      <pointsize>14</pointsize>
+      <italic>false</italic>
+     </font>
+    </property>
+    <property name="text">
+     <string>Поиск по характеристике</string>
+    </property>
+   </widget>
+   <widget class="QFrame" name="frame_2">
+    <property name="geometry">
+     <rect>
+      <x>29</x>
+      <y>0</y>
+      <width>641</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(149, 149, 149);</string>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::StyledPanel</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Raised</enum>
+    </property>
+   </widget>
+   <widget class="QFrame" name="frame_3">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>30</y>
+      <width>641</width>
+      <height>681</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(222, 222, 222);</string>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::StyledPanel</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Raised</enum>
+    </property>
+    <widget class="QPushButton" name="btn_change">
+     <property name="geometry">
+      <rect>
+       <x>370</x>
+       <y>580</y>
+       <width>111</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background-color: rgb(255, 255, 255);</string>
+     </property>
+     <property name="text">
+      <string>Изменить блюдо</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_8">
+     <property name="geometry">
+      <rect>
+       <x>210</x>
+       <y>530</y>
+       <width>141</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Times New Roman</family>
+       <pointsize>12</pointsize>
+       <weight>75</weight>
+       <italic>true</italic>
+       <bold>true</bold>
+       <underline>true</underline>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background-color: rgb(222, 222, 222);
+</string>
+     </property>
+     <property name="text">
+      <string>Основные функции</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_7">
+     <property name="geometry">
+      <rect>
+       <x>240</x>
+       <y>40</y>
+       <width>141</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>14</pointsize>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background-color: rgb(222, 222, 222);</string>
+     </property>
+     <property name="text">
+      <string>Таблица Блюд</string>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QFrame" name="frame_4">
+    <property name="geometry">
+     <rect>
+      <x>670</x>
+      <y>0</y>
+      <width>31</width>
+      <height>711</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(149, 149, 149);</string>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::StyledPanel</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Raised</enum>
+    </property>
+   </widget>
+   <widget class="QFrame" name="frame_5">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>710</y>
+      <width>701</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(149, 149, 149);</string>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::StyledPanel</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Raised</enum>
+    </property>
+   </widget>
+   <widget class="QFrame" name="frame_6">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>31</width>
+      <height>711</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(149, 149, 149);</string>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::StyledPanel</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Raised</enum>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_10">
+    <property name="geometry">
+     <rect>
+      <x>750</x>
+      <y>520</y>
+      <width>211</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Times New Roman</family>
+      <pointsize>14</pointsize>
+      <italic>false</italic>
+     </font>
+    </property>
+    <property name="text">
+     <string>Поиск по ингредиентам</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="lineingr">
+    <property name="geometry">
+     <rect>
+      <x>740</x>
+      <y>600</y>
+      <width>201</width>
+      <height>20</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_11">
+    <property name="geometry">
+     <rect>
+      <x>790</x>
+      <y>560</y>
+      <width>101</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Times New Roman</family>
+      <pointsize>12</pointsize>
+      <italic>true</italic>
+     </font>
+    </property>
+    <property name="text">
+     <string>Ингредиенты</string>
+    </property>
+   </widget>
+   <widget class="QFrame" name="frame_7">
+    <property name="geometry">
+     <rect>
+      <x>700</x>
+      <y>0</y>
+      <width>311</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(149, 149, 149);</string>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::StyledPanel</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Raised</enum>
+    </property>
+   </widget>
+   <widget class="QFrame" name="frame_8">
+    <property name="geometry">
+     <rect>
+      <x>980</x>
+      <y>30</y>
+      <width>31</width>
+      <height>711</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(149, 149, 149);</string>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::StyledPanel</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Raised</enum>
+    </property>
+   </widget>
+   <widget class="QFrame" name="frame_9">
+    <property name="geometry">
+     <rect>
+      <x>700</x>
+      <y>710</y>
+      <width>281</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(149, 149, 149);</string>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::StyledPanel</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Raised</enum>
+    </property>
+   </widget>
+   <widget class="QFrame" name="frame_10">
+    <property name="geometry">
+     <rect>
+      <x>700</x>
+      <y>470</y>
+      <width>281</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(149, 149, 149);</string>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::StyledPanel</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Raised</enum>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btn_find2">
+    <property name="geometry">
+     <rect>
+      <x>790</x>
+      <y>650</y>
+      <width>81</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Times New Roman</family>
+      <pointsize>9</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>Найти</string>
+    </property>
+   </widget>
+   <zorder>frame_3</zorder>
    <zorder>comboBox</zorder>
-   <zorder>pushButton</zorder>
+   <zorder>btn_find1</zorder>
    <zorder>tableWidget</zorder>
    <zorder>label</zorder>
    <zorder>label_2</zorder>
    <zorder>formLayoutWidget</zorder>
    <zorder>label_6</zorder>
    <zorder>linek</zorder>
-   <zorder>label_7</zorder>
    <zorder>btn_add</zorder>
+   <zorder>btn_del</zorder>
+   <zorder>label_9</zorder>
+   <zorder>frame_2</zorder>
+   <zorder>frame_4</zorder>
+   <zorder>frame_5</zorder>
+   <zorder>frame_6</zorder>
+   <zorder>label_10</zorder>
+   <zorder>lineingr</zorder>
+   <zorder>label_11</zorder>
+   <zorder>frame_7</zorder>
+   <zorder>frame_8</zorder>
+   <zorder>frame_9</zorder>
+   <zorder>frame_10</zorder>
+   <zorder>btn_find2</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>983</width>
+     <width>1017</width>
      <height>21</height>
     </rect>
    </property>
