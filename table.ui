@@ -529,8 +529,8 @@
    <widget class="QPushButton" name="btn_find2">
     <property name="geometry">
      <rect>
-      <x>790</x>
-      <y>650</y>
+      <x>800</x>
+      <y>660</y>
       <width>81</width>
       <height>31</height>
      </rect>
@@ -543,6 +543,19 @@
     </property>
     <property name="text">
      <string>Найти</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_12">
+    <property name="geometry">
+     <rect>
+      <x>750</x>
+      <y>620</y>
+      <width>181</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>(Нужно вводить через ';' и пробел)</string>
     </property>
    </widget>
    <zorder>frame_3</zorder>
@@ -569,6 +582,7 @@
    <zorder>frame_9</zorder>
    <zorder>frame_10</zorder>
    <zorder>btn_find2</zorder>
+   <zorder>label_12</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">

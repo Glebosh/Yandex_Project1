@@ -45,10 +45,12 @@ class DelForm(QWidget):
     def deleting(self):
         text = self.line.text()
 
+        # Все имена блюд
         cur = self.connection.cursor()
         names = cur.execute("""SELECT name FROM dishes""")
         names = [i[0] for i in names]
 
+        # Проверка на соответствие имени в блюдах
         if text not in names:
             self.error = Error(self, "Данного блюда нет в таблице!")
             self.error.show()
@@ -57,9 +59,8 @@ class DelForm(QWidget):
                 WHERE name = ?""", (text,)).fetchone()
             id_dishes = cur.execute("""SELECT id FROM dishes
                 WHERE name = ?""", (text,)).fetchone()
-
-            print(id_receipt[0], id_dishes[0])
             
+            # Удаление нужных строк
             cur.execute("""DELETE from receipt
                 WHERE id = ?""", (id_receipt[0],))
             cur.execute("""DELETE from dishes
@@ -430,22 +431,27 @@ class SecondForm(QMainWindow):
         self.linep.setText('')
         self.linef.setText('')
 
-        text = self.lineingr.text().lower()
+        text = self.lineingr.text().lower().split(';')
 
+        # Проверка на присутствие введёных значений
         if not text:
             self.query = self.defualt
             self.select_data()
         else:
+            # Ингредиенты всех блюд
             cur = self.connection.cursor()
             ingredients = cur.execute("""SELECT ingredients FROM receipt""").fetchall()
             ids = []
 
+            # Список нужных id
             for el in ingredients:
-                for i in el[0].lower().split(';'):
-                    if text in i:
-                        id_ingredient = cur.execute("""SELECT id FROM receipt WHERE ingredients = ?""", (el[0],)).fetchone()
-                        ids.append(id_ingredient[0])
-
+                for i in el[0].lower().split('; '):
+                    for j in text:
+                        if j in i:
+                            id_ingredient = cur.execute("""SELECT id FROM receipt WHERE ingredients = ?""", (el[0],)).fetchone()
+                            ids.append(id_ingredient[0])
+            
+            # Выводим нужные блюда
             if ids:
                 find = []
                 for i in range(1, len(ids)):
