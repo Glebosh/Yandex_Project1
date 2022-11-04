@@ -224,7 +224,7 @@ class Error(QWidget):
 class SecondForm(QMainWindow):
     def __init__(self, *args):
         super().__init__()
-        uic.loadUi('table_m.ui', self)
+        uic.loadUi('table.ui', self)
         self.initUI(args)
 
     def initUI(self, args):
@@ -429,8 +429,41 @@ class SecondForm(QMainWindow):
         self.linec.setText('')
         self.linep.setText('')
         self.linef.setText('')
-        
-        ingridients
+
+        text = self.lineingr.text().lower()
+
+        if not text:
+            self.query = self.defualt
+            self.select_data()
+        else:
+            cur = self.connection.cursor()
+            ingredients = cur.execute("""SELECT ingredients FROM receipt""").fetchall()
+            ids = []
+
+            for el in ingredients:
+                for i in el[0].lower().split(';'):
+                    if text in i:
+                        id_ingredient = cur.execute("""SELECT id FROM receipt WHERE ingredients = ?""", (el[0],)).fetchone()
+                        ids.append(id_ingredient[0])
+
+            if ids:
+                find = []
+                for i in range(1, len(ids)):
+                    find.append(f'OR dishes.receipt = {ids[i]}')
+                self.query = f"""SELECT
+                        dishes.name,
+                        dishes.kalori,
+                        dishes.protein,
+                        dishes.fats,
+                        dishes.carb,
+                        type.id
+                    FROM
+                        dishes_type
+                    LEFT JOIN dishes ON dishes_type.id_dishes = dishes.id
+                    LEFT JOIN type ON dishes_type.id_type = type.id
+                    WHERE dishes.receipt = {ids[0]} {' '.join(find)}"""
+                
+                self.select_data()
 
     def select_data(self):
         # Создание таблицы
