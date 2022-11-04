@@ -27,6 +27,132 @@ class Registration(QWidget):
         self.close()
 
 
+class AddingForm(QWidget):
+    def __init__(self, *args):
+        super().__init__()
+        uic.loadUi('AddForm.ui', self)
+        self.initUI()
+
+    def initUI(self):
+        self.setWindowTitle('Окно добавления')
+
+        # Связь с таблицей
+        self.connection = sqlite3.connect("food.db")
+
+        # ComboBox
+        cur = self.connection.cursor()
+        t = []
+        for i in [i[0] for i in cur.execute("""SELECT name FROM type""").fetchall()]:
+            t.append(i)
+        self.comboBox.addItems(t)
+        self.item = False
+
+        # Button
+        self.btn.clicked.connect(self.adding)
+
+    def adding(self):
+        name_text = self.linean.text()
+        ingr_text = self.linei.text()
+        fats = self.linef.text()
+        carbs = self.linec.text()
+        proteins = self.linep.text()
+        kaloris = self.linek.text()
+        new_win = False
+        nothing = False
+
+        s_inger = [i for i in ingr_text.split('; ')]
+        names = self.connection.cursor().execute("""SELECT name FROM dishes""")
+        names = [i[0] for i in names]
+
+        if not name_text or ''.join(''.join(''.join(name_text.split(' ')).split('.')).split(',')).isdigit():
+            self.error = Error(self, "Введено число или ничего, а не строка \nв названии!!!")
+            self.error.show()
+        elif name_text in names:
+            self.error = Error(self, "Такое название уже есть в таблице!!!")
+            self.error.show()
+        else:
+            if ''.join(s_inger).isdigit() or not ingr_text or ''.join(''.join(''.join(ingr_text.split(' ')).split('.')).split(',')).isdigit():
+                self.error = Error(self, "Введено число или ничего, а не строка \nв ингредиентах!!!")
+                self.error.show()
+            else:
+                try:
+                    # Проверка на отрицательность и присутствия элементов
+                    if fats:
+                        fats = int(fats)
+                        if fats < 0:
+                            new_win = True
+                    else:
+                        nothing = True
+                    if carbs:
+                        carbs = int(carbs)
+                        if carbs < 0:
+                            new_win = True
+                    else:
+                        nothing = True
+                    if proteins:
+                        proteins = int(proteins)
+                        if proteins < 0:
+                            new_win = True
+                    else:
+                        nothing = True
+                    if kaloris:
+                        kaloris = int(kaloris)
+                        if kaloris < 0:
+                            new_win = True
+                    else:
+                        nothing = True
+                except ValueError:
+                    # Вывод ошибки, если введено строковое значение или не целого числа
+                    self.error = Error(self, "Введено строковое значение или не целое, \nа нужно натуральное или ноль у характеристик!!!")
+                    self.error.show()
+
+                if new_win:
+                    # Вывод ошибки, если введено отрицательное число
+                    self.new_win = False
+                    self.error = Error(self, "Введено отрицытельное значение, \nа не натуральное или ноль у характеристик!!!")
+                    self.error.show()
+                
+                elif nothing:
+                    # Вывод ошибки, если ничего не введено
+                    nothing = False
+                    self.error = Error(self, "Вы забыли ввести значение \nв поле с вводом у характеристик!")
+                    self.error.show()
+                else:
+                    text = self.plainText.toPlainText()
+                    if not text:
+                        self.error = Error(self, "Вы забыли ввести рецепт блюда!!!")
+                        self.error.show()
+                    else:
+                        # Выбранный элемент ComboBox
+                        item = self.comboBox.currentText()
+
+                        s = ';'.join(s_inger)
+                        cur = self.connection.cursor()
+                        cur.execute(f"""INSERT INTO receipt(ingredients,receipt) 
+                        VALUES(?,?)""", (s, text))
+                        self.connection.commit()
+
+                        id_need = cur.execute("""SELECT id FROM receipt
+                            WHERE receipt = ? AND ingredients = ?""", (text, s)).fetchone()
+
+                        cur.execute(f"""INSERT INTO dishes(name, kalori, protein, fats, carb, receipt) 
+                        VALUES(?, ?, ?, ?, ?, ?)""", (name_text, kaloris, proteins, fats, carbs, id_need[0]))
+                        self.connection.commit()
+
+                        id_type = cur.execute("""SELECT id FROM type
+                            WHERE name = ?""", (item,)).fetchone()
+
+                        id_dish = cur.execute("""SELECT id FROM dishes
+                            WHERE name = ?""", (name_text,)).fetchone()
+
+                        cur.execute(f"""INSERT INTO dishes_type(id_type, id_dishes) 
+                        VALUES(?, ?)""", (id_type[0], id_dish[0]))
+                        self.connection.commit()
+
+                        self.connection.close()
+        self.close()
+
+
 class Error(QWidget):
     def __init__(self, *error_text):
         super().__init__()
@@ -51,6 +177,7 @@ class SecondForm(QMainWindow):
     def initUI(self, args):
         self.setWindowTitle('Окно таблицы')
 
+        # Связь с таблицей
         self.connection = sqlite3.connect("food.db")
 
         # Вывод данных с первого окна
@@ -66,8 +193,9 @@ class SecondForm(QMainWindow):
         self.comboBox.addItems(t)
         self.item = False
 
-        # Button "НАЙТИ"
+        # Buttons
         self.pushButton.clicked.connect(self.reform_table)
+        self.btn_add.clicked.connect(self.add_element)
 
         # Задаём значения для таблиц
         self.defualt = """SELECT
@@ -86,6 +214,10 @@ class SecondForm(QMainWindow):
 
         # Отображаем всю таблицу
         self.select_data()
+
+    def add_element(self):
+        self.add_form = AddingForm(self)
+        self.add_form.show()
 
     def reform_table(self):
         # Создаём нужные переменные
@@ -125,6 +257,7 @@ class SecondForm(QMainWindow):
             # Выбранный элемент ComboBox
             self.item = self.comboBox.currentText()
 
+            # Подбираем нужный поиск по таблице
             if self.item == 'Всё':
                 self.query = self.defualt
             else:
@@ -141,9 +274,11 @@ class SecondForm(QMainWindow):
                 LEFT JOIN type ON dishes_type.id_type = type.id
                 WHERE type.name = '{self.item}'"""
 
+            # Выводим все нужные элементы таблицы
             cursor = self.connection.cursor()
             res = cursor.execute(self.query).fetchall()
 
+            # Функция по нахождению наиближайшего введённого значения в таблице
             def making_num(comp, n):
                 need = ''
                 num = -1
@@ -159,6 +294,7 @@ class SecondForm(QMainWindow):
             need_c = -1
             need_p = -1
 
+            # Поиск подходящих значения для переменных
             if kaloris:
                 need_k = making_num(kaloris, n=1)
 
@@ -171,6 +307,7 @@ class SecondForm(QMainWindow):
             if fats:
                 need_f = making_num(fats, n=3)
 
+            # Поиск для таблицы, где выбран тип блюда и его доп. характеристики
             if self.item != 'Всё':
                 if need_k == -1 and need_f == -1 and need_c == -1 and need_p == -1:
                     pass
@@ -188,7 +325,7 @@ class SecondForm(QMainWindow):
                     LEFT JOIN type ON dishes_type.id_type = type.id
                     WHERE type.name = '{self.item}' AND dishes.kalori = {need_k} OR dishes.protein = {need_p} OR dishes.carb = {need_c} OR dishes.fats = {need_f}"""
             else:
-                # Не Всё
+                # Поиск для таблицы, где выбран только тип блюда
                 if need_k == -1 and need_f == -1 and need_c == -1 and need_p == -1:
                     self.query = self.defualt
                 else:
