@@ -842,7 +842,7 @@ class SecondForm(QMainWindow):
 
         self.tableWidget.setColumnWidth(1, 164)
         self.tableWidget.setColumnWidth(2, 50)
-        self.tableWidget.setHorizontalHeaderLabels(['ID', 'Калории', 'Белки', 'Жиры', 'Углеводы', 'Тип'])
+        self.tableWidget.setHorizontalHeaderLabels(['Название', 'Калории', 'Белки', 'Жиры', 'Углеводы', 'Тип'])
 
 
 if __name__ == '__main__':
