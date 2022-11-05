@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>520</width>
-    <height>575</height>
+    <width>554</width>
+    <height>726</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -226,8 +226,8 @@
   <widget class="QPushButton" name="btn">
    <property name="geometry">
     <rect>
-     <x>134</x>
-     <y>530</y>
+     <x>130</x>
+     <y>660</y>
      <width>241</width>
      <height>23</height>
     </rect>
@@ -253,6 +253,44 @@
    </property>
    <property name="text">
     <string>(Нужно вводить через ';' и пробел)</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_11">
+   <property name="geometry">
+    <rect>
+     <x>190</x>
+     <y>520</y>
+     <width>111</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Times New Roman</family>
+     <pointsize>14</pointsize>
+     <italic>true</italic>
+    </font>
+   </property>
+   <property name="text">
+    <string>Фотография</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="btn_addphoto">
+   <property name="geometry">
+    <rect>
+     <x>170</x>
+     <y>560</y>
+     <width>151</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>10</pointsize>
+    </font>
+   </property>
+   <property name="text">
+    <string>Добавить фото</string>
    </property>
   </widget>
  </widget>

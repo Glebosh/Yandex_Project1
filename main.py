@@ -1,9 +1,11 @@
-import sys
+import sys, os, shutil
 import sqlite3
 
 from PyQt5 import uic
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton
+from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QInputDialog, QVBoxLayout
 from PyQt5.QtWidgets import QMainWindow, QLabel, QTableWidget, QTableWidgetItem
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPixmap
 
 
 class Registration(QWidget):
@@ -73,6 +75,77 @@ class DelForm(QWidget):
         self.close()
 
 
+class Photo(QLabel):
+    def __init__(self):
+        super().__init__()
+
+        # Текст у окна
+        self.setAlignment(Qt.AlignCenter)
+        self.setText('Перенесите фотографию в это окно')
+
+    def setPhoto(self, photo):
+        # Выставление фотографии
+        super().setPixmap(photo)
+
+
+class PhotoForm(QWidget):
+    def __init__(self, *args):
+        super().__init__()
+        self.initUI()
+
+    def initUI(self):
+        self.setWindowTitle('Окно фотографии')
+        self.resize(300, 300)
+        self.setAcceptDrops(True)
+
+        self.file_path = ''
+
+        # Место для фотографии
+        layout = QVBoxLayout()
+
+        # Фотография
+        self.photo = Photo()
+
+        # Добавляем фотографию
+        layout.addWidget(self.photo)
+
+        # Сохраняем изменения
+        self.setLayout(layout)
+
+    def dragEnterEvent(self, event):
+        # Проверка на присутствие фотографии
+        if event.mimeData().hasImage:
+            event.accept()
+        else:
+            event.ignore()
+
+    def dragMoveEvent(self, event):
+        # Проверка на присутствие фотографии
+        if event.mimeData().hasImage:
+            event.accept()
+        else:
+            event.ignore()
+
+    def dropEvent(self, event):
+        # Загружаем фото
+        if event.mimeData().hasImage:
+            event.setDropAction(Qt.CopyAction)
+            # Путь файла
+            self.file_path = event.mimeData().urls()[0].toLocalFile()
+            self.path()
+
+            event.accept()
+            self.close()
+        else:
+            event.ignore()
+
+    def path(self):
+        return self.file_path
+
+    def set_image(self, file_path):
+        self.photo.setPixmap(QPixmap(file_path))
+
+
 class AddingForm(QWidget):
     def __init__(self, *args):
         super().__init__()
@@ -81,6 +154,8 @@ class AddingForm(QWidget):
 
     def initUI(self):
         self.setWindowTitle('Окно добавления')
+
+        self.photo = ''
 
         # Связь с таблицей
         self.connection = sqlite3.connect("food.db")
@@ -95,9 +170,14 @@ class AddingForm(QWidget):
 
         # Button
         self.btn.clicked.connect(self.adding)
+        self.btn_addphoto.clicked.connect(self.add_photo)
+
+    def add_photo(self):
+        self.photo = PhotoForm(self)
+        self.photo.show()
 
     def adding(self):
-        # Создаём нужные переменные
+        # Создаём нужные переменные\
         name_text = self.linean.text()
         ingr_text = self.linei.text()
         fats = self.linef.text()
@@ -174,37 +254,60 @@ class AddingForm(QWidget):
                         self.error = Error(self, "Вы забыли ввести рецепт блюда!!!")
                         self.error.show()
                     else:
-                        # Выбранный элемент ComboBox
-                        item = self.comboBox.currentText()
+                        try:
+                            # Выбранный элемент ComboBox
+                            item = self.comboBox.currentText()
 
-                        # Добавление в receipt
-                        s = ';'.join(s_inger)
-                        cur = self.connection.cursor()
-                        cur.execute(f"""INSERT INTO receipt(ingredients,receipt) 
-                        VALUES(?,?)""", (s, text))
-                        self.connection.commit()
+                            # Добавляем фотографию, если она есть
+                            name_file = ''
+                            if self.photo:
+                                if self.photo.path():
+                                    # Перемещаем фотографию
+                                    need_file = f'{os.getcwd()}/Photos'
+                                    name_file = self.photo.path().split('/')[-1]
+                                    shutil.move(self.photo.path(), need_file)
+                            
+                            # Добавление в receipt
+                            s = ';'.join(s_inger)
+                            cur = self.connection.cursor()
+                            cur.execute(f"""INSERT INTO receipt(ingredients,receipt,photo) 
+                            VALUES(?,?,?)""", (s, text, name_file))
+                            self.connection.commit()
 
-                        # Добавление в dishes
-                        id_need = cur.execute("""SELECT id FROM receipt
-                            WHERE receipt = ? AND ingredients = ?""", (text, s)).fetchone()
+                            # Добавление в dishes
+                            id_need = cur.execute("""SELECT id FROM receipt
+                                WHERE receipt = ? AND ingredients = ?""", (text, s)).fetchone()
 
-                        cur.execute(f"""INSERT INTO dishes(name, kalori, protein, fats, carb, receipt) 
-                        VALUES(?, ?, ?, ?, ?, ?)""", (name_text, kaloris, proteins, fats, carbs, id_need[0]))
-                        self.connection.commit()
+                            cur.execute(f"""INSERT INTO dishes(name, kalori, protein, fats, carb, receipt) 
+                            VALUES(?, ?, ?, ?, ?, ?)""", (name_text, kaloris, proteins, fats, carbs, id_need[0]))
+                            self.connection.commit()
 
-                        # Добавление в dishes_type
-                        id_type = cur.execute("""SELECT id FROM type
-                            WHERE name = ?""", (item,)).fetchone()
+                            # Добавление в dishes_type
+                            id_type = cur.execute("""SELECT id FROM type
+                                WHERE name = ?""", (item,)).fetchone()
 
-                        id_dish = cur.execute("""SELECT id FROM dishes
-                            WHERE name = ?""", (name_text,)).fetchone()
+                            id_dish = cur.execute("""SELECT id FROM dishes
+                                WHERE name = ?""", (name_text,)).fetchone()
 
-                        cur.execute(f"""INSERT INTO dishes_type(id_type, id_dishes) 
-                        VALUES(?, ?)""", (id_type[0], id_dish[0]))
-                        self.connection.commit()
+                            cur.execute(f"""INSERT INTO dishes_type(id_type, id_dishes) 
+                            VALUES(?, ?)""", (id_type[0], id_dish[0]))
+                            self.connection.commit()
 
-                        self.connection.close()
+                            self.connection.close()
+                        except Exception:
+                            error = Error(self, 'Неожиданная ошибка, перезагрузитесь!')
+                            error.show()
         self.close()
+
+
+class ChoiceForm(QWidget):
+    def __init__(self, *args):
+        super().__init__()
+        uic.loadUi('', self)
+        self.initUI(args)
+    
+    def initUI(self, args):
+        pass
 
 
 class Error(QWidget):
@@ -253,6 +356,8 @@ class SecondForm(QMainWindow):
         self.btn_add.clicked.connect(self.add_element)
         self.btn_del.clicked.connect(self.del_element)
         self.btn_change.clicked.connect(self.change_element)
+        self.btn_choose.clicked.connect(self.choose_element)
+        self.btn_refresh.clicked.connect(self.refresh_table)
 
         # Задаём значения для таблиц
         self.defualt = """SELECT
@@ -272,6 +377,10 @@ class SecondForm(QMainWindow):
         # Отображаем всю таблицу
         self.select_data()
 
+    def refresh_table(self):
+        self.defualt = self.defualt
+        self.select_data()
+
     def add_element(self):
         self.add_form = AddingForm(self)
         self.add_form.show()
@@ -281,8 +390,19 @@ class SecondForm(QMainWindow):
         self.del_form.show()
 
     def change_element(self):
-        # ДОДЕЛАТЬ!!!!!
+        # ДОДЕЛАТЬ!!!!! И выключить редактирование в таблице
         pass
+
+    def choose_element(self):
+        name, ok_pressed = QInputDialog.getText(self, "Введите блюда", 
+                                                "Название название блюда:")
+        if ok_pressed:
+            if name in [i[0] for i in self.connection.cursor().execute("""SELECT name FROM dishes""").fetchall()]:
+                self.choice = ChoiceForm(self, name)
+                self.choice.show()
+            else:
+                self.error = Error(self, "Такого блюда нет в таблице!!!")
+                self.error.show()
 
     def find1_table(self):
         # Создаём нужные переменные
@@ -447,6 +567,8 @@ class SecondForm(QMainWindow):
             for el in ingredients:
                 for i in el[0].lower().split('; '):
                     for j in text:
+                        # Удаление лишних пробелов
+                        j = j.strip()
                         if j in i:
                             id_ingredient = cur.execute("""SELECT id FROM receipt WHERE ingredients = ?""", (el[0],)).fetchone()
                             ids.append(id_ingredient[0])
@@ -468,8 +590,10 @@ class SecondForm(QMainWindow):
                     LEFT JOIN dishes ON dishes_type.id_dishes = dishes.id
                     LEFT JOIN type ON dishes_type.id_type = type.id
                     WHERE dishes.receipt = {ids[0]} {' '.join(find)}"""
-                
-                self.select_data()
+            else:
+                self.query = """"""
+            
+            self.select_data()
 
     def select_data(self):
         # Создание таблицы
