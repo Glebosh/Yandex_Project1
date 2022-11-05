@@ -331,11 +331,18 @@ class RedactForm(QWidget):
         # Buttons
         self.btn_load.clicked.connect(self.load_table)
         self.btn_save.clicked.connect(self.save_table)
+        self.btn_photo.clicked.connect(self.add_photo)
+
+    def add_photo(self):
+        self.photo = PhotoForm(self)
+        self.photo.show()
 
     def load_table(self):
+        # Все имена
         names = self.connection.cursor().execute("""SELECT name FROM dishes""")
         names = [i[0] for i in names]
 
+        # Проверка на соответствие имён
         self.name = self.linen.text()
         if self.name not in names:
             self.error = Error(self, "Такого названия нет в таблице!!!")
@@ -371,7 +378,17 @@ class RedactForm(QWidget):
 
             self.tableWidget.setColumnWidth(1, 164)
             self.tableWidget.setColumnWidth(2, 50)
-            self.tableWidget.setHorizontalHeaderLabels(['ID', 'Калории', 'Белки', 'Жиры', 'Углеводы'])
+            self.tableWidget.setHorizontalHeaderLabels(['Название', 'Калории', 'Белки', 'Жиры', 'Углеводы'])
+
+            # Receipt
+            rec = self.connection.cursor().execute("""SELECT receipt FROM receipt
+            WHERE id=(SELECT receipt FROM dishes WHERE name = ?)""", (self.name,)).fetchone()
+            self.plainTextEdit.setPlainText(rec[0])
+
+            # Ingredients
+            rec = self.connection.cursor().execute("""SELECT ingredients FROM receipt
+            WHERE id=(SELECT receipt FROM dishes WHERE name = ?)""", (self.name,)).fetchone()
+            self.lineingr.setText('; '.join(rec[0].split(';')))
 
             self.modified = {}
 
@@ -382,9 +399,11 @@ class RedactForm(QWidget):
 
     def save_table(self):
         self.t = True
-        if 'ID' in self.modified.keys() and len(self.modified) > 1:
+        # Проверка значений для имени и значений белков, жиров, углеводов, калорий
+        if 'Название' in self.modified.keys() and len(self.modified) > 1:
+            # Проверка, если имя и другие элементы
             for i in self.modified:
-                if i != 'ID':
+                if i != 'Название':
                     el = str(self.modified[i])
                     try:
                         if int(el) < 0:
@@ -397,23 +416,23 @@ class RedactForm(QWidget):
                         self.t = False
                 else:
                     try:
-                        if float(str(self.modified['ID'])):
+                        if float(str(self.modified['Название'])):
                             self.error = Error(self, "Введено число, а не строка!!!")
                             self.error.show()
                             self.t = False
                     except ValueError:
                         pass
-
-        elif 'ID' in self.modified.keys() and len(self.modified) == 1:
+        # Проверка, если только имя
+        elif 'Название' in self.modified.keys() and len(self.modified) == 1:
             try:
-                if float(str(self.modified['ID'])):
+                if float(str(self.modified['Название'])):
                     self.error = Error(self, "Введено число, а не строка!!!")
                     self.error.show()
                     self.t = False
             except ValueError:
                 pass
-        
-        elif 'ID' not in self.modified.keys() and len(self.modified) != 0:
+        # Проверка, если нет имени, но есть другие элементы
+        elif 'Название' not in self.modified.keys() and len(self.modified) != 0:
             for i in self.modified:
                 el = str(self.modified[i])
                 try:
@@ -427,24 +446,72 @@ class RedactForm(QWidget):
                     self.t = False
         
         if self.t:
-            item = self.comboBox.currentText()
-            cur = self.connection.cursor()
+            ingr_text = self.lineingr.text()
+            s_inger = [i for i in ingr_text.split('; ')]
+            # Проверка на ингредиенты
+            if ''.join(s_inger).isdigit() or not ingr_text or ''.join(''.join(''.join(ingr_text.split(' ')).split('.')).split(',')).isdigit():
+                self.error = Error(self, "Введено число или ничего, а не строка \nв ингредиентах!!!")
+                self.error.show()
+            else:
+                # ids
+                cur = self.connection.cursor()
+                id_dish = cur.execute("""SELECT id FROM dishes WHERE name = ?""", (self.name,)).fetchone()
+                id_receipt = cur.execute("""SELECT id FROM receipt 
+                WHERE id = (SELECT receipt FROM dishes WHERE name = ?)""", (self.name,)).fetchone()
 
-            id = cur.execute("""SELECT id FROM dishes WHERE name = ?""", (self.name,)).fetchone()
-            print(id[0])
-            cur.execute("""UPDATE dishes_type 
-            SET id_type=(SELECT id FROM type WHERE name = ?)
-            WHERE id_dishes = ?""", (item, id[0]))
+                # Нужные элементы
+                text = self.plainTextEdit.toPlainText()
+                item = self.comboBox.currentText()
 
-            que = "UPDATE dishes SET\n"
-            que += ", ".join([f"{key}='{self.modified.get(key)}'"
-                            for key in self.modified.keys()])
-            que += "WHERE name = ?"
-            cur.execute(que, (self.name,))
-            self.connection.commit()
-            self.modified.clear()
+                # Добавляем фотографию, если она есть
+                try:
+                    name_file = ''
+                    if self.photo:
+                        photo = cur.execute("""SELECT photo FROM receipt 
+                            WHERE id = ?""", (id_receipt[0],)).fetchone()[0]
+                        if photo:
+                            need_file = f'{os.getcwd()}/Photos'
+                            os.remove(f'{need_file}/{photo}')
+                        if self.photo.path():
+                            # Перемещаем фотографию
+                            need_file = f'{os.getcwd()}/Photos'
+                            name_file = self.photo.path().split('/')[-1]
+                            shutil.move(self.photo.path(), need_file)
 
-            self.close()
+                    # Изменение фото
+                    if name_file:
+                        cur.execute("""UPDATE receipt
+                        SET photo = ?
+                        WHERE id = ?""", (name_file, id_receipt[0]))
+
+                    # Изменение в receipt 
+                    cur.execute("""UPDATE receipt
+                    SET receipt = ?, ingredients = ?
+                    WHERE id = ?""", (text, ';'.join(s_inger), id_receipt[0]))
+
+                    # Изменение в dishes_type
+                    cur.execute("""UPDATE dishes_type 
+                    SET id_type=(SELECT id FROM type WHERE name = ?)
+                    WHERE id_dishes = ?""", (item, id_dish[0]))
+                    
+                    # Изменение в dishes
+                    if self.modified:
+                        que = "UPDATE dishes SET\n"
+                        que += ", ".join([f"{key}='{self.modified.get(key)}'"
+                                        for key in self.modified.keys()])
+                        que += "WHERE name = ?"
+                        cur.execute(que, (self.name,))
+                    else:
+                        error = Error(self, 'Изменений по калориям и другим харак. не произошло!')
+                        error.show()
+                    self.connection.commit()
+                    self.modified.clear()
+                
+                except Exception:
+                    error = Error(self, 'Изменений не произошло!')
+                    error.show()
+
+                self.close()
 
 
 class ChoiceForm(QWidget):
