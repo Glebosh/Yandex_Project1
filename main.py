@@ -61,6 +61,12 @@ class DelForm(QWidget):
                 WHERE name = ?""", (text,)).fetchone()
             id_dishes = cur.execute("""SELECT id FROM dishes
                 WHERE name = ?""", (text,)).fetchone()
+
+            photo = cur.execute("""SELECT photo FROM receipt 
+                WHERE id = ?""", (id_receipt[0],)).fetchone()[0]
+            if photo:
+                need_file = f'{os.getcwd()}/Photos'
+                os.remove(f'{need_file}/{photo}')
             
             # Удаление нужных строк
             cur.execute("""DELETE from receipt
@@ -300,6 +306,147 @@ class AddingForm(QWidget):
         self.close()
 
 
+class RedactForm(QWidget):
+    def __init__(self, *args):
+        super().__init__()
+        uic.loadUi('ReformForm.ui', self)
+        self.initUI()
+
+    def initUI(self):
+        self.setWindowTitle('Окно изменений')
+        self.modified = {}
+
+        # Связь с таблицей
+        self.connection = sqlite3.connect("food.db")
+        self.tableWidget.itemChanged.connect(self.item_changed)
+        self.titles = None
+
+        # ComboBox
+        cur = self.connection.cursor()
+        t = []
+        for i in [i[0] for i in cur.execute("""SELECT name FROM type""").fetchall()]:
+            t.append(i)
+        self.comboBox.addItems(t)
+
+        # Buttons
+        self.btn_load.clicked.connect(self.load_table)
+        self.btn_save.clicked.connect(self.save_table)
+
+    def load_table(self):
+        names = self.connection.cursor().execute("""SELECT name FROM dishes""")
+        names = [i[0] for i in names]
+
+        self.name = self.linen.text()
+        if self.name not in names:
+            self.error = Error(self, "Такого названия нет в таблице!!!")
+            self.error.show()
+        else:
+            # Создание таблицы
+            res = list(set(self.connection.cursor().execute("""SELECT
+                dishes.name,
+                dishes.kalori,
+                dishes.protein,
+                dishes.fats,
+                dishes.carb
+            FROM
+                dishes_type
+            LEFT JOIN dishes ON dishes_type.id_dishes = dishes.id
+            LEFT JOIN type ON dishes_type.id_type = type.id
+            WHERE dishes.name = ?""", (self.name,)).fetchall()))
+
+            # Проверка на отсутствие элементов в res
+            if not res:
+                self.tableWidget.setColumnCount(0)
+            else:
+                self.tableWidget.setColumnCount(len(res[0]))
+            self.titles = ['ID', 'kalori', 'protein', 'fats', 'carb']
+            self.tableWidget.setRowCount(0)
+
+            for i, row in enumerate(res):
+                self.tableWidget.setRowCount(
+                    self.tableWidget.rowCount() + 1)
+                for j, elem in enumerate(row):
+                    self.tableWidget.setItem(
+                        i, j, QTableWidgetItem(str(elem)))
+
+            self.tableWidget.setColumnWidth(1, 164)
+            self.tableWidget.setColumnWidth(2, 50)
+            self.tableWidget.setHorizontalHeaderLabels(['ID', 'Калории', 'Белки', 'Жиры', 'Углеводы'])
+
+            self.modified = {}
+
+    def item_changed(self, item):
+        # Если значение в ячейке было изменено, 
+        # то в словарь записывается пара: название поля, новое значение
+        self.modified[self.titles[item.column()]] = item.text()
+
+    def save_table(self):
+        self.t = True
+        if 'ID' in self.modified.keys() and len(self.modified) > 1:
+            for i in self.modified:
+                if i != 'ID':
+                    el = str(self.modified[i])
+                    try:
+                        if int(el) < 0:
+                            self.error = Error(self, "Введено отрицытельное значение, \nа не натуральное или ноль!!!")
+                            self.error.show()
+                            self.t = False
+                    except ValueError:
+                        self.error = Error(self, "Введено строковое значение или не целое, \nа нужно натуральное или ноль!!!")
+                        self.error.show()
+                        self.t = False
+                else:
+                    try:
+                        if float(str(self.modified['ID'])):
+                            self.error = Error(self, "Введено число, а не строка!!!")
+                            self.error.show()
+                            self.t = False
+                    except ValueError:
+                        pass
+
+        elif 'ID' in self.modified.keys() and len(self.modified) == 1:
+            try:
+                if float(str(self.modified['ID'])):
+                    self.error = Error(self, "Введено число, а не строка!!!")
+                    self.error.show()
+                    self.t = False
+            except ValueError:
+                pass
+        
+        elif 'ID' not in self.modified.keys() and len(self.modified) != 0:
+            for i in self.modified:
+                el = str(self.modified[i])
+                try:
+                    if int(el) < 0:
+                        self.error = Error(self, "Введено отрицытельное значение, \nа не натуральное или ноль!!!")
+                        self.error.show()
+                        self.t = False
+                except ValueError:
+                    self.error = Error(self, "Введено строковое значение или не целое, \nа нужно натуральное или ноль!!!")
+                    self.error.show()
+                    self.t = False
+        
+        if self.t:
+            item = self.comboBox.currentText()
+            cur = self.connection.cursor()
+
+            id = cur.execute("""SELECT id FROM dishes WHERE name = ?""", (self.name,)).fetchone()
+            print(id[0])
+            cur.execute("""UPDATE dishes_type 
+            SET id_type=(SELECT id FROM type WHERE name = ?)
+            WHERE id_dishes = ?""", (item, id[0]))
+
+            que = "UPDATE dishes SET\n"
+            que += ", ".join([f"{key}='{self.modified.get(key)}'"
+                            for key in self.modified.keys()])
+            que += "WHERE name = ?"
+            cur.execute(que, (self.name,))
+            self.connection.commit()
+            self.modified.clear()
+
+            self.close()
+
+
 class ChoiceForm(QWidget):
     def __init__(self, *args):
         super().__init__()
@@ -308,6 +455,7 @@ class ChoiceForm(QWidget):
     
     def initUI(self, args):
         pass
+        # ДОДЕЛАТЬ!!!!
 
 
 class Error(QWidget):
@@ -325,22 +473,29 @@ class Error(QWidget):
         self.lb.setText(f'Ошибка: {error_text[-1]}')
 
 
+class HelpForm(QWidget):
+    def __init__(self, *args):
+        super().__init__()
+        uic.loadUi('HelpForm.ui', self)
+        self.setWindowTitle('Помошник')
+
+
 class SecondForm(QMainWindow):
     def __init__(self, *args):
         super().__init__()
         uic.loadUi('table.ui', self)
-        self.initUI(args)
+        self.initUI()
 
-    def initUI(self, args):
+    def initUI(self):
         self.setWindowTitle('Окно таблицы')
 
         # Связь с таблицей
         self.connection = sqlite3.connect("food.db")
 
         # Вывод данных с первого окна
-        self.lbl = QLabel(args[-1], self)
-        self.lbl.move(10, 750)
-        self.lbl.adjustSize()
+        # self.lbl = QLabel(args[-1], self)
+        # self.lbl.move(10, 750)
+        # self.lbl.adjustSize()
 
         # ComboBox
         cur = self.connection.cursor()
@@ -358,6 +513,7 @@ class SecondForm(QMainWindow):
         self.btn_change.clicked.connect(self.change_element)
         self.btn_choose.clicked.connect(self.choose_element)
         self.btn_refresh.clicked.connect(self.refresh_table)
+        self.btn_help.clicked.connect(self.help_form)
 
         # Задаём значения для таблиц
         self.defualt = """SELECT
@@ -377,6 +533,10 @@ class SecondForm(QMainWindow):
         # Отображаем всю таблицу
         self.select_data()
 
+    def help_form(self):
+        self.help = HelpForm(self)
+        self.help.show()
+
     def refresh_table(self):
         self.defualt = self.defualt
         self.select_data()
@@ -390,8 +550,8 @@ class SecondForm(QMainWindow):
         self.del_form.show()
 
     def change_element(self):
-        # ДОДЕЛАТЬ!!!!! И выключить редактирование в таблице
-        pass
+        self.red_form = RedactForm(self)
+        self.red_form.show()
 
     def choose_element(self):
         name, ok_pressed = QInputDialog.getText(self, "Введите блюда", 

@@ -61,6 +61,9 @@
       <height>401</height>
      </rect>
     </property>
+    <property name="editTriggers">
+     <set>QAbstractItemView::NoEditTriggers</set>
+    </property>
    </widget>
    <widget class="QLabel" name="label">
     <property name="geometry">
@@ -372,6 +375,22 @@
      </property>
      <property name="text">
       <string>Обновить таблицу</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="btn_help">
+     <property name="geometry">
+      <rect>
+       <x>30</x>
+       <y>40</y>
+       <width>121</width>
+       <height>23</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background-color: rgb(255, 255, 255);</string>
+     </property>
+     <property name="text">
+      <string>Помошник</string>
      </property>
     </widget>
    </widget>
