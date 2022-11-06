@@ -196,13 +196,13 @@ class AddingForm(QWidget):
         # переменные имён и ингредиентов
         s_inger = [i for i in ingr_text.split('; ')]
         names = self.connection.cursor().execute("""SELECT name FROM dishes""")
-        names = [i[0] for i in names]
+        names = [str(i[0]).lower() for i in names]
 
         # Проверка имени
         if not name_text or ''.join(''.join(''.join(name_text.split(' ')).split('.')).split(',')).isdigit():
             self.error = Error(self, "Введено число или ничего, а не строка \nв названии!!!")
             self.error.show()
-        elif name_text in names:
+        elif str(name_text).lower() in names:
             self.error = Error(self, "Такое название уже есть в таблице!!!")
             self.error.show()
         else:
@@ -264,21 +264,35 @@ class AddingForm(QWidget):
                             # Выбранный элемент ComboBox
                             item = self.comboBox.currentText()
 
-                            # Добавляем фотографию, если она есть
-                            name_file = ''
-                            if self.photo:
-                                if self.photo.path():
-                                    # Перемещаем фотографию
-                                    need_file = f'{os.getcwd()}/Photos'
-                                    name_file = self.photo.path().split('/')[-1]
-                                    shutil.move(self.photo.path(), need_file)
+                            new_name = ''
                             
                             # Добавление в receipt
                             s = ';'.join(s_inger)
                             cur = self.connection.cursor()
                             cur.execute(f"""INSERT INTO receipt(ingredients,receipt,photo) 
-                            VALUES(?,?,?)""", (s, text, name_file))
+                            VALUES(?,?,?)""", (s, text, new_name))
                             self.connection.commit()
+
+                            # id receipt
+                            cur = self.connection.cursor()
+                            id_receipt = cur.execute("""SELECT id FROM receipt 
+                            WHERE ingredients = ? AND receipt = ?""", (s, text)).fetchone()
+
+                            # Добавляем фотографию, если она есть
+                            if self.photo:
+                                if self.photo.path():
+                                    # Перемещаем фотографию и переименовываем
+                                    need_file = f'{os.getcwd()}/Photos'
+                                    need_path = '/'.join(self.photo.path().split('/')[:-1])
+                                    new_name = f'photo_{id_receipt[0]}.png'
+                                    # print(self.photo.path(), f'{need_path}/{new_name}')
+                                    os.rename(self.photo.path(), f'{need_path}/{new_name}')
+                                    shutil.move(f'{need_path}/{new_name}', f'{need_file}')
+
+                            if new_name:
+                                cur.execute("""UPDATE receipt
+                                SET photo = ?
+                                WHERE id = ?""", (new_name, id_receipt[0]))
 
                             # Добавление в dishes
                             id_need = cur.execute("""SELECT id FROM receipt
@@ -303,6 +317,7 @@ class AddingForm(QWidget):
                         except Exception:
                             error = Error(self, 'Неожиданная ошибка, перезагрузитесь!')
                             error.show()
+                            
         self.close()
 
 
@@ -340,11 +355,11 @@ class RedactForm(QWidget):
     def load_table(self):
         # Все имена
         names = self.connection.cursor().execute("""SELECT name FROM dishes""")
-        names = [i[0] for i in names]
+        names = [str(i[0]).lower() for i in names]
 
         # Проверка на соответствие имён
         self.name = self.linen.text()
-        if self.name not in names:
+        if self.name.lower() not in names:
             self.error = Error(self, "Такого названия нет в таблице!!!")
             self.error.show()
         else:
@@ -470,19 +485,24 @@ class RedactForm(QWidget):
                         photo = cur.execute("""SELECT photo FROM receipt 
                             WHERE id = ?""", (id_receipt[0],)).fetchone()[0]
                         if photo:
+                            # Удаляем старое фото
                             need_file = f'{os.getcwd()}/Photos'
                             os.remove(f'{need_file}/{photo}')
                         if self.photo.path():
-                            # Перемещаем фотографию
+                            # Перемещаем фотографию и переименовываем
                             need_file = f'{os.getcwd()}/Photos'
-                            name_file = self.photo.path().split('/')[-1]
-                            shutil.move(self.photo.path(), need_file)
+                            name_file = self.photo.path()
+                            need_path = '/'.join(self.photo.path().split('/')[:-1])
+                            new_name = f'photo_{id_receipt[0]}.png'
+                            # print(self.photo.path(), f'{need_path}/{new_name}')
+                            os.rename(self.photo.path(), f'{need_path}/{new_name}')
+                            shutil.move(f'{need_path}/{new_name}', f'{need_file}')
 
                     # Изменение фото
                     if name_file:
                         cur.execute("""UPDATE receipt
                         SET photo = ?
-                        WHERE id = ?""", (name_file, id_receipt[0]))
+                        WHERE id = ?""", (new_name, id_receipt[0]))
 
                     # Изменение в receipt 
                     cur.execute("""UPDATE receipt
