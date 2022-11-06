@@ -1,7 +1,7 @@
 import sys, os, shutil
 import sqlite3
 
-from PyQt5 import uic
+from PyQt5 import uic, QtGui
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QInputDialog, QVBoxLayout
 from PyQt5.QtWidgets import QMainWindow, QLabel, QTableWidget, QTableWidgetItem
 from PyQt5.QtCore import Qt
@@ -537,12 +537,43 @@ class RedactForm(QWidget):
 class ChoiceForm(QWidget):
     def __init__(self, *args):
         super().__init__()
-        uic.loadUi('', self)
+        uic.loadUi('ChoiceForm.ui', self)
         self.initUI(args)
     
     def initUI(self, args):
-        pass
-        # ДОДЕЛАТЬ!!!!
+        # Связь с таблицей
+        self.connection = sqlite3.connect("food.db")
+        cur = self.connection.cursor()
+
+        for i in args:
+            name = str(i)
+        self.label_name.setText(f'Название: {name}')
+        
+        dishes = cur.execute("""SELECT kalori, protein, fats, carb, receipt, id FROM dishes
+        WHERE name = ?""", (name,)).fetchone()
+
+        receipt = cur.execute("""SELECT receipt, ingredients, photo FROM receipt
+        WHERE id = ?""", (dishes[-2],)).fetchone()
+
+        type = cur.execute("""SELECT name FROM type
+        WHERE id = (SELECT id_type FROM dishes_type
+        WHERE id_dishes = ?)""", (dishes[-1],)).fetchone()
+        
+        # Основные характеристики
+        self.linek.setText(str(dishes[0]))
+        self.linep.setText(str(dishes[1]))
+        self.linef.setText(str(dishes[2]))
+        self.linec.setText(str(dishes[3]))
+        self.label_type.setText(f'Тип: {type[0]}')
+
+        # Рецепт и ингредиенты
+        self.textEdit_r.setPlainText(receipt[0])
+        self.textEdit_i.setPlainText(';\n'.join(receipt[1].split(';')))
+
+        # Фотография
+        if receipt[-1]:
+            self.pix = QtGui.QPixmap(f'{os.getcwd()}/Photos/{receipt[-1]}')
+            self.label_photo.setPixmap(self.pix)
 
 
 class Error(QWidget):

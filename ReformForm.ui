@@ -114,6 +114,12 @@
      <height>101</height>
     </rect>
    </property>
+   <property name="font">
+    <font>
+     <family>Times New Roman</family>
+     <pointsize>10</pointsize>
+    </font>
+   </property>
   </widget>
   <widget class="QLineEdit" name="lineingr">
    <property name="geometry">

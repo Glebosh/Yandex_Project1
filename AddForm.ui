@@ -219,6 +219,12 @@
      <height>171</height>
     </rect>
    </property>
+   <property name="font">
+    <font>
+     <family>Times New Roman</family>
+     <pointsize>11</pointsize>
+    </font>
+   </property>
    <property name="plainText">
     <string/>
    </property>
