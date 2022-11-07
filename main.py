@@ -147,7 +147,7 @@ class DelForm(QWidget):
             # Проверка пользователя
             user = self.connection.cursor().execute("""SELECT user FROM dishes
             WHERE name = ?""", (text,)).fetchone()
-            if user[0] == self.user or self.user == '1':
+            if user[0] == self.user or self.user == '1' or self.user == 1:
                 id_receipt = cur.execute("""SELECT receipt FROM dishes
                     WHERE name = ?""", (text,)).fetchone()
                 id_dishes = cur.execute("""SELECT id FROM dishes
@@ -433,6 +433,10 @@ class RedactForm(QWidget):
         self.tableWidget.itemChanged.connect(self.item_changed)
         self.titles = None
 
+        # CheckBox
+        self.del_photo = False
+        self.checkBox.stateChanged.connect(self.change_state)
+
         # ComboBox
         cur = self.connection.cursor()
         t = []
@@ -444,6 +448,12 @@ class RedactForm(QWidget):
         self.btn_load.clicked.connect(self.load_table)
         self.btn_save.clicked.connect(self.save_table)
         self.btn_photo.clicked.connect(self.add_photo)
+
+    def change_state(self, state):
+        if state == Qt.Checked:
+            self.del_photo = True
+        else:
+            self.del_photo = False
 
     def add_photo(self):
         self.photo = PhotoForm(self)
@@ -463,7 +473,7 @@ class RedactForm(QWidget):
             # Проверка пользователя
             user = self.connection.cursor().execute("""SELECT user FROM dishes
             WHERE name = ?""", (self.name,)).fetchone()
-            if user[0] == self.user or self.user == '1':
+            if user[0] == self.user or self.user == 1 or self.user == '1':
                 # Создание таблицы
                 res = list(set(self.connection.cursor().execute("""SELECT
                     dishes.name,
@@ -585,28 +595,39 @@ class RedactForm(QWidget):
                 # Добавляем фотографию, если она есть
                 try:
                     name_file = ''
-                    if self.photo:
-                        photo = cur.execute("""SELECT photo FROM receipt 
-                            WHERE id = ?""", (id_receipt[0],)).fetchone()[0]
-                        if photo:
-                            # Удаляем старое фото
-                            need_file = f'{os.getcwd()}/Photos'
-                            os.remove(f'{need_file}/{photo}')
-                        if self.photo.path():
-                            # Перемещаем фотографию и переименовываем
-                            need_file = f'{os.getcwd()}/Photos'
-                            name_file = self.photo.path()
-                            need_path = '/'.join(self.photo.path().split('/')[:-1])
-                            new_name = f'photo_{id_receipt[0]}.png'
-                            # print(self.photo.path(), f'{need_path}/{new_name}')
-                            os.rename(self.photo.path(), f'{need_path}/{new_name}')
-                            shutil.move(f'{need_path}/{new_name}', f'{need_file}')
+                    if not self.del_photo:
+                        if self.photo:
+                            photo = cur.execute("""SELECT photo FROM receipt 
+                                WHERE id = ?""", (id_receipt[0],)).fetchone()[0]
+                            if photo:
+                                # Удаляем старое фото
+                                need_file = f'{os.getcwd()}/Photos'
+                                os.remove(f'{need_file}/{photo}')
+                            if self.photo.path():
+                                # Перемещаем фотографию и переименовываем
+                                need_file = f'{os.getcwd()}/Photos'
+                                name_file = self.photo.path()
+                                need_path = '/'.join(self.photo.path().split('/')[:-1])
+                                new_name = f'photo_{id_receipt[0]}.png'
+                                # print(self.photo.path(), f'{need_path}/{new_name}')
+                                os.rename(self.photo.path(), f'{need_path}/{new_name}')
+                                shutil.move(f'{need_path}/{new_name}', f'{need_file}')
 
                     # Изменение фото
-                    if name_file:
-                        cur.execute("""UPDATE receipt
-                        SET photo = ?
-                        WHERE id = ?""", (new_name, id_receipt[0]))
+                    check_photo = cur.execute("""SELECT photo FROM receipt
+                    WHERE id = ?""", (id_receipt[0],)).fetchone()
+                    if self.del_photo:
+                        if check_photo:
+                            cur.execute("""UPDATE receipt
+                            SET photo = ?
+                            WHERE id = ?""", ('', id_receipt[0]))
+                            need_file = f'{os.getcwd()}/Photos'
+                            os.remove(f'{need_file}/{check_photo[0]}')
+                    else:
+                        if name_file:
+                            cur.execute("""UPDATE receipt
+                            SET photo = ?
+                            WHERE id = ?""", (new_name, id_receipt[0]))
 
                     # Изменение в receipt 
                     cur.execute("""UPDATE receipt
@@ -626,7 +647,7 @@ class RedactForm(QWidget):
                         que += "WHERE name = ?"
                         cur.execute(que, (self.name,))
                     else:
-                        self.error = Error(self, 'Изменений по калориям и другим харак. не произошло!')
+                        self.error = Error(self, 'Изменений по калориям и \nдругим харак. не произошло!')
                         self.error.show()
                     self.connection.commit()
                     self.modified.clear()

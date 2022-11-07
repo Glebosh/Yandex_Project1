@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>422</width>
-    <height>577</height>
+    <height>602</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -174,7 +174,7 @@
     <rect>
      <x>20</x>
      <y>530</y>
-     <width>311</width>
+     <width>281</width>
      <height>20</height>
     </rect>
    </property>
@@ -231,7 +231,7 @@
      <x>0</x>
      <y>260</y>
      <width>16</width>
-     <height>301</height>
+     <height>321</height>
     </rect>
    </property>
    <property name="styleSheet">
@@ -250,7 +250,7 @@
      <x>410</x>
      <y>260</y>
      <width>16</width>
-     <height>301</height>
+     <height>321</height>
     </rect>
    </property>
    <property name="styleSheet">
@@ -286,7 +286,7 @@
    <property name="geometry">
     <rect>
      <x>0</x>
-     <y>560</y>
+     <y>580</y>
      <width>431</width>
      <height>21</height>
     </rect>
@@ -324,7 +324,7 @@
    <property name="geometry">
     <rect>
      <x>340</x>
-     <y>470</y>
+     <y>500</y>
      <width>41</width>
      <height>16</height>
     </rect>
@@ -343,13 +343,32 @@
    <property name="geometry">
     <rect>
      <x>320</x>
-     <y>500</y>
+     <y>530</y>
      <width>75</width>
      <height>41</height>
     </rect>
    </property>
    <property name="text">
     <string>Изменить</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="checkBox">
+   <property name="geometry">
+    <rect>
+     <x>300</x>
+     <y>470</y>
+     <width>111</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Times New Roman</family>
+     <pointsize>11</pointsize>
+    </font>
+   </property>
+   <property name="text">
+    <string>Удалить Фото</string>
    </property>
   </widget>
  </widget>
