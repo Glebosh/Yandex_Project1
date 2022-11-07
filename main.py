@@ -8,35 +8,122 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
 
 
-class Registration(QWidget):
+class EntryMenu(QWidget):
     def __init__(self):
         super().__init__()
+        uic.loadUi('EntryMenuForm.ui', self)
         self.initUI()
 
     def initUI(self):
-        self.setGeometry(800, 300, 300, 300)
-        self.setWindowTitle('Регистрация')
+        self.setWindowTitle('Меню входа')
 
-        self.btn = QPushButton('Вход', self)
-        self.btn.resize(100, 50)
-        self.btn.move(100, 100)
+        # Связь с таблицей
+        self.connection = sqlite3.connect("food.db")
 
-        self.btn.clicked.connect(self.open_second_form)
+        # Buttons
+        self.btn_ent.clicked.connect(self.entering)
+        self.btn_reg.clicked.connect(self.registration)
 
-    def open_second_form(self):
-        self.second_form = SecondForm(self, "Добро пожаловать...")
-        self.second_form.show()
+    def entering(self):
+        name = self.linen.text()
+        password = self.linep.text()
+        cur = self.connection.cursor()
+
+        names = [i[0] for i in cur.execute("""SELECT name FROM registration""").fetchall()]
+
+        if not name or not password:
+            pass
+        else:
+            if name in names:
+                password_t = cur.execute("""SELECT password FROM registration
+                WHERE name = ?""", (name,)).fetchone()
+
+                if password == password_t[0]:
+                    self.user = cur.execute("""SELECT id FROM registration
+                    WHERE name = ?""", (name,)).fetchone()
+
+                    self.mainWin = SecondForm(self, self.user[0])
+                    self.mainWin.show()
+                    self.close()
+                else:
+                    self.error = Error(self, 'Пароль не подходит!')
+                    self.error.show()
+            else:
+                self.error = Error(self, 'Такого пользователя нет!')
+                self.error.show()
+            
+
+    def registration(self):
+        self.reg = Registration(self)
+        self.reg.show()
         self.close()
+
+
+class Registration(QWidget):
+    def __init__(self, *args):
+        super().__init__()
+        uic.loadUi('RegistrationForm.ui', self)
+        self.initUI()
+
+    def initUI(self):
+        # Связь с таблицей
+        self.connection = sqlite3.connect("food.db")
+
+        self.btn.clicked.connect(self.registration)
+
+    def registration(self):
+        name = self.linen.text()
+        password = self.linep.text()
+        cur = self.connection.cursor()
+        names = [i[0] for i in cur.execute("""SELECT name FROM registration""").fetchall()]
+
+        # Проверка имени
+        if name in names:
+            self.error = Error(self, 'Данное имя уже существует.\nПридумайте другое!')
+            self.error.show()
+        elif len(set(name)) <= 4:
+            self.error = Error(self, 'Данное имя не подходит по количетсву \nнеповторяющихся символов!')
+            self.error.show()
+        elif name.isdigit():
+            self.error = Error(self, 'В имени не могут быть одни числа!')
+            self.error.show()
+        else:
+            if len(set(password)) <= 5:
+                self.error = Error(self, 'Данный пароль не подходит по длине!')
+                self.error.show()
+            elif password.isdigit():
+                self.error = Error(self, 'В пароле не могут быть одни числа!')
+                self.error.show()
+            elif password.isalpha():
+                self.error = Error(self, 'В пароле не могут быть одни буквы!')
+                self.error.show()
+            elif password.isupper():
+                self.error = Error(self, 'В пароле не могут быть буквы\nтолько верхнего регистра!')
+                self.error.show()
+            elif password.islower():
+                self.error = Error(self, 'В пароле не могут быть буквы\nтолько нижнего регистра!')
+                self.error.show()
+            else:
+                cur.execute("""INSERT INTO registration(name, password)
+                VALUES(?, ?)""", (name, password))
+                self.connection.commit()
+
+                self.user = cur.execute("""SELECT id FROM registration
+                WHERE name = ?""", (name,)).fetchone()
+                self.mainWin = SecondForm(self, self.user[0])
+                self.mainWin.show()
+                self.close()
 
 
 class DelForm(QWidget):
     def __init__(self, *args):
         super().__init__()
         uic.loadUi('DelForm.ui', self)
-        self.initUI()
+        self.initUI(args)
     
-    def initUI(self):
+    def initUI(self, args):
         self.setWindowTitle('Окно удаления')
+        self.user = args[-1]
 
         # Связь с таблицей
         self.connection = sqlite3.connect("food.db")
@@ -57,26 +144,33 @@ class DelForm(QWidget):
             self.error = Error(self, "Данного блюда нет в таблице!")
             self.error.show()
         else:
-            id_receipt = cur.execute("""SELECT receipt FROM dishes
-                WHERE name = ?""", (text,)).fetchone()
-            id_dishes = cur.execute("""SELECT id FROM dishes
-                WHERE name = ?""", (text,)).fetchone()
+            # Проверка пользователя
+            user = self.connection.cursor().execute("""SELECT user FROM dishes
+            WHERE name = ?""", (text,)).fetchone()
+            if user[0] == self.user or self.user == '1':
+                id_receipt = cur.execute("""SELECT receipt FROM dishes
+                    WHERE name = ?""", (text,)).fetchone()
+                id_dishes = cur.execute("""SELECT id FROM dishes
+                    WHERE name = ?""", (text,)).fetchone()
 
-            photo = cur.execute("""SELECT photo FROM receipt 
-                WHERE id = ?""", (id_receipt[0],)).fetchone()[0]
-            if photo:
-                need_file = f'{os.getcwd()}/Photos'
-                os.remove(f'{need_file}/{photo}')
-            
-            # Удаление нужных строк
-            cur.execute("""DELETE from receipt
-                WHERE id = ?""", (id_receipt[0],))
-            cur.execute("""DELETE from dishes
-                WHERE id = ?""", (id_dishes[0],))
-            cur.execute("""DELETE from dishes_type
-                WHERE id = ?""", (id_dishes[0],))
+                photo = cur.execute("""SELECT photo FROM receipt 
+                    WHERE id = ?""", (id_receipt[0],)).fetchone()[0]
+                if photo:
+                    need_file = f'{os.getcwd()}/Photos'
+                    os.remove(f'{need_file}/{photo}')
+                
+                # Удаление нужных строк
+                cur.execute("""DELETE from receipt
+                    WHERE id = ?""", (id_receipt[0],))
+                cur.execute("""DELETE from dishes
+                    WHERE id = ?""", (id_dishes[0],))
+                cur.execute(f"""DELETE from dishes_type
+                    WHERE id_dishes = ?""", (id_dishes[0],))
 
-            self.connection.commit()
+                self.connection.commit()
+            else:
+                self.error = Error(self, "Вы не можите удалять \nчужие публикации!!!")
+                self.error.show()
 
         self.close()
 
@@ -156,12 +250,13 @@ class AddingForm(QWidget):
     def __init__(self, *args):
         super().__init__()
         uic.loadUi('AddForm.ui', self)
-        self.initUI()
+        self.initUI(args)
 
-    def initUI(self):
+    def initUI(self, args):
         self.setWindowTitle('Окно добавления')
 
         self.photo = ''
+        self.user = args[-1]
 
         # Связь с таблицей
         self.connection = sqlite3.connect("food.db")
@@ -298,8 +393,8 @@ class AddingForm(QWidget):
                             id_need = cur.execute("""SELECT id FROM receipt
                                 WHERE receipt = ? AND ingredients = ?""", (text, s)).fetchone()
 
-                            cur.execute(f"""INSERT INTO dishes(name, kalori, protein, fats, carb, receipt) 
-                            VALUES(?, ?, ?, ?, ?, ?)""", (name_text, kaloris, proteins, fats, carbs, id_need[0]))
+                            cur.execute(f"""INSERT INTO dishes(name, kalori, protein, fats, carb, receipt, user) 
+                            VALUES(?, ?, ?, ?, ?, ?, ?)""", (name_text, kaloris, proteins, fats, carbs, id_need[0], self.user))
                             self.connection.commit()
 
                             # Добавление в dishes_type
@@ -315,8 +410,8 @@ class AddingForm(QWidget):
 
                             self.connection.close()
                         except Exception:
-                            error = Error(self, 'Неожиданная ошибка, перезагрузитесь!')
-                            error.show()
+                            self.error = Error(self, 'Неожиданная ошибка, перезагрузитесь!')
+                            self.error.show()
                             
         self.close()
 
@@ -325,11 +420,13 @@ class RedactForm(QWidget):
     def __init__(self, *args):
         super().__init__()
         uic.loadUi('ReformForm.ui', self)
-        self.initUI()
+        self.initUI(args)
 
-    def initUI(self):
+    def initUI(self, args):
         self.setWindowTitle('Окно изменений')
         self.modified = {}
+        self.photo = ''
+        self.user = args[-1]
 
         # Связь с таблицей
         self.connection = sqlite3.connect("food.db")
@@ -363,49 +460,56 @@ class RedactForm(QWidget):
             self.error = Error(self, "Такого названия нет в таблице!!!")
             self.error.show()
         else:
-            # Создание таблицы
-            res = list(set(self.connection.cursor().execute("""SELECT
-                dishes.name,
-                dishes.kalori,
-                dishes.protein,
-                dishes.fats,
-                dishes.carb
-            FROM
-                dishes_type
-            LEFT JOIN dishes ON dishes_type.id_dishes = dishes.id
-            LEFT JOIN type ON dishes_type.id_type = type.id
-            WHERE dishes.name = ?""", (self.name,)).fetchall()))
+            # Проверка пользователя
+            user = self.connection.cursor().execute("""SELECT user FROM dishes
+            WHERE name = ?""", (self.name,)).fetchone()
+            if user[0] == self.user or self.user == '1':
+                # Создание таблицы
+                res = list(set(self.connection.cursor().execute("""SELECT
+                    dishes.name,
+                    dishes.kalori,
+                    dishes.protein,
+                    dishes.fats,
+                    dishes.carb
+                FROM
+                    dishes_type
+                LEFT JOIN dishes ON dishes_type.id_dishes = dishes.id
+                LEFT JOIN type ON dishes_type.id_type = type.id
+                WHERE dishes.name = ?""", (self.name,)).fetchall()))
 
-            # Проверка на отсутствие элементов в res
-            if not res:
-                self.tableWidget.setColumnCount(0)
+                # Проверка на отсутствие элементов в res
+                if not res:
+                    self.tableWidget.setColumnCount(0)
+                else:
+                    self.tableWidget.setColumnCount(len(res[0]))
+                self.titles = ['ID', 'kalori', 'protein', 'fats', 'carb']
+                self.tableWidget.setRowCount(0)
+
+                for i, row in enumerate(res):
+                    self.tableWidget.setRowCount(
+                        self.tableWidget.rowCount() + 1)
+                    for j, elem in enumerate(row):
+                        self.tableWidget.setItem(
+                            i, j, QTableWidgetItem(str(elem)))
+
+                self.tableWidget.setColumnWidth(1, 164)
+                self.tableWidget.setColumnWidth(2, 50)
+                self.tableWidget.setHorizontalHeaderLabels(['Название', 'Калории', 'Белки', 'Жиры', 'Углеводы'])
+
+                # Receipt
+                rec = self.connection.cursor().execute("""SELECT receipt FROM receipt
+                WHERE id=(SELECT receipt FROM dishes WHERE name = ?)""", (self.name,)).fetchone()
+                self.plainTextEdit.setPlainText(rec[0])
+
+                # Ingredients
+                rec = self.connection.cursor().execute("""SELECT ingredients FROM receipt
+                WHERE id=(SELECT receipt FROM dishes WHERE name = ?)""", (self.name,)).fetchone()
+                self.lineingr.setText('; '.join(rec[0].split(';')))
+
+                self.modified = {}
             else:
-                self.tableWidget.setColumnCount(len(res[0]))
-            self.titles = ['ID', 'kalori', 'protein', 'fats', 'carb']
-            self.tableWidget.setRowCount(0)
-
-            for i, row in enumerate(res):
-                self.tableWidget.setRowCount(
-                    self.tableWidget.rowCount() + 1)
-                for j, elem in enumerate(row):
-                    self.tableWidget.setItem(
-                        i, j, QTableWidgetItem(str(elem)))
-
-            self.tableWidget.setColumnWidth(1, 164)
-            self.tableWidget.setColumnWidth(2, 50)
-            self.tableWidget.setHorizontalHeaderLabels(['Название', 'Калории', 'Белки', 'Жиры', 'Углеводы'])
-
-            # Receipt
-            rec = self.connection.cursor().execute("""SELECT receipt FROM receipt
-            WHERE id=(SELECT receipt FROM dishes WHERE name = ?)""", (self.name,)).fetchone()
-            self.plainTextEdit.setPlainText(rec[0])
-
-            # Ingredients
-            rec = self.connection.cursor().execute("""SELECT ingredients FROM receipt
-            WHERE id=(SELECT receipt FROM dishes WHERE name = ?)""", (self.name,)).fetchone()
-            self.lineingr.setText('; '.join(rec[0].split(';')))
-
-            self.modified = {}
+                self.error = Error(self, "Вы не можите редактировать \nчужие публикации!!!")
+                self.error.show()
 
     def item_changed(self, item):
         # Если значение в ячейке было изменено, 
@@ -522,14 +626,14 @@ class RedactForm(QWidget):
                         que += "WHERE name = ?"
                         cur.execute(que, (self.name,))
                     else:
-                        error = Error(self, 'Изменений по калориям и другим харак. не произошло!')
-                        error.show()
+                        self.error = Error(self, 'Изменений по калориям и другим харак. не произошло!')
+                        self.error.show()
                     self.connection.commit()
                     self.modified.clear()
                 
                 except Exception:
-                    error = Error(self, 'Изменений не произошло!')
-                    error.show()
+                    self.error = Error(self, 'Изменений не произошло!')
+                    self.error.show()
 
                 self.close()
 
@@ -560,20 +664,32 @@ class ChoiceForm(QWidget):
         WHERE id_dishes = ?)""", (dishes[-1],)).fetchone()
         
         # Основные характеристики
-        self.linek.setText(str(dishes[0]))
-        self.linep.setText(str(dishes[1]))
-        self.linef.setText(str(dishes[2]))
-        self.linec.setText(str(dishes[3]))
-        self.label_type.setText(f'Тип: {type[0]}')
+        try:
+            self.linek.setText(str(dishes[0]))
+            self.linep.setText(str(dishes[1]))
+            self.linef.setText(str(dishes[2]))
+            self.linec.setText(str(dishes[3]))
+            self.label_type.setText(f'Тип: {type[0]}')
+        except Exception:
+            self.error = Error(self, "Ошибка с файлами!!!")
+            self.error.show()
 
         # Рецепт и ингредиенты
-        self.textEdit_r.setPlainText(receipt[0])
-        self.textEdit_i.setPlainText(';\n'.join(receipt[1].split(';')))
+        try:
+            self.textEdit_r.setPlainText(receipt[0])
+            self.textEdit_i.setPlainText(';\n'.join(receipt[1].split(';')))
+        except Exception:
+            self.error = Error(self, "Ошибка с файлами!!!")
+            self.error.show()
 
         # Фотография
-        if receipt[-1]:
-            self.pix = QtGui.QPixmap(f'{os.getcwd()}/Photos/{receipt[-1]}')
-            self.label_photo.setPixmap(self.pix)
+        try:
+            if receipt[-1]:
+                self.pix = QtGui.QPixmap(f'{os.getcwd()}/Photos/{receipt[-1]}')
+                self.label_photo.setPixmap(self.pix)
+        except Exception:
+            self.error = Error(self, "Ошибка с файлами!!!")
+            self.error.show()
 
 
 class Error(QWidget):
@@ -602,18 +718,17 @@ class SecondForm(QMainWindow):
     def __init__(self, *args):
         super().__init__()
         uic.loadUi('table.ui', self)
-        self.initUI()
+        self.initUI(args)
 
-    def initUI(self):
+    def initUI(self, args):
         self.setWindowTitle('Окно таблицы')
 
         # Связь с таблицей
         self.connection = sqlite3.connect("food.db")
 
-        # Вывод данных с первого окна
-        # self.lbl = QLabel(args[-1], self)
-        # self.lbl.move(10, 750)
-        # self.lbl.adjustSize()
+        # Пользователь
+        self.user = args[-1]
+        
 
         # ComboBox
         cur = self.connection.cursor()
@@ -660,15 +775,15 @@ class SecondForm(QMainWindow):
         self.select_data()
 
     def add_element(self):
-        self.add_form = AddingForm(self)
+        self.add_form = AddingForm(self, self.user)
         self.add_form.show()
 
     def del_element(self):
-        self.del_form = DelForm(self)
+        self.del_form = DelForm(self, self.user)
         self.del_form.show()
 
     def change_element(self):
-        self.red_form = RedactForm(self)
+        self.red_form = RedactForm(self, self.user)
         self.red_form.show()
 
     def choose_element(self):
@@ -897,7 +1012,11 @@ class SecondForm(QMainWindow):
 
 
 if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    ex = Registration()
-    ex.show()
-    sys.exit(app.exec())
+    try:
+        app = QApplication(sys.argv)
+        ex = EntryMenu()
+        ex.show()
+        sys.exit(app.exec())
+    except Exception:
+        error = Error("Ошибка с файлами!!!")
+        error.show()
