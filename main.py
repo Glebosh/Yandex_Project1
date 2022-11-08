@@ -31,10 +31,12 @@ class EntryMenu(QWidget):
 
         names = [i[0] for i in cur.execute("""SELECT name FROM registration""").fetchall()]
 
+        # Проверка присутствия имени
         if not name or not password:
             pass
         else:
             if name in names:
+                # Проверка пароля
                 password_t = cur.execute("""SELECT password FROM registration
                 WHERE name = ?""", (name,)).fetchone()
 
@@ -68,7 +70,8 @@ class Registration(QWidget):
     def initUI(self):
         # Связь с таблицей
         self.connection = sqlite3.connect("food.db")
-
+        
+        # Buttons
         self.btn.clicked.connect(self.registration)
         self.btn_back.clicked.connect(self.back)
 
@@ -95,6 +98,7 @@ class Registration(QWidget):
             self.error = Error(self, 'В имени не могут быть одни числа!')
             self.error.show()
         else:
+            # Проверка пароля
             if len(set(password)) <= 5:
                 self.error = Error(self, 'Данный пароль не подходит по длине!')
                 self.error.show()
@@ -111,6 +115,7 @@ class Registration(QWidget):
                 self.error = Error(self, 'В пароле не могут быть буквы\nтолько нижнего регистра!')
                 self.error.show()
             else:
+                # Добавление пользователя в db
                 cur.execute("""INSERT INTO registration(name, password)
                 VALUES(?, ?)""", (name, password))
                 self.connection.commit()
