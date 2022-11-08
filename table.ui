@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1009</width>
-    <height>751</height>
+    <height>761</height>
    </rect>
   </property>
   <property name="font">
@@ -581,7 +581,7 @@
     <property name="geometry">
      <rect>
       <x>800</x>
-      <y>660</y>
+      <y>670</y>
       <width>81</width>
       <height>31</height>
      </rect>
@@ -606,7 +606,20 @@
      </rect>
     </property>
     <property name="text">
-     <string>(Нужно вводить через ';' и пробел)</string>
+     <string>(Нужно вводить через ';' и пробел</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_13">
+    <property name="geometry">
+     <rect>
+      <x>760</x>
+      <y>640</y>
+      <width>181</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>или ничего, если элемент один)</string>
     </property>
    </widget>
    <zorder>frame_3</zorder>
@@ -634,6 +647,7 @@
    <zorder>frame_10</zorder>
    <zorder>btn_find2</zorder>
    <zorder>label_12</zorder>
+   <zorder>label_13</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">

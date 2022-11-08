@@ -1052,5 +1052,4 @@ if __name__ == '__main__':
         ex.show()
         sys.exit(app.exec())
     except Exception:
-        error = Error("Ошибка с файлами!!!")
-        error.show()
+        print("Ошибка с файлами!!!")
