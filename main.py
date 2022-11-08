@@ -799,7 +799,7 @@ class SecondForm(QMainWindow):
         self.help.show()
 
     def refresh_table(self):
-        self.defualt = self.defualt
+        self.query = self.defualt
         self.select_data()
 
     def add_element(self):
