@@ -9,7 +9,7 @@ from PyQt5.QtGui import QPixmap
 
 
 class EntryMenu(QWidget):
-    def __init__(self):
+    def __init__(self, *args):
         super().__init__()
         uic.loadUi('EntryMenuForm.ui', self)
         self.initUI()
@@ -70,6 +70,13 @@ class Registration(QWidget):
         self.connection = sqlite3.connect("food.db")
 
         self.btn.clicked.connect(self.registration)
+        self.btn_back.clicked.connect(self.back)
+
+    def back(self):
+        self.menu = EntryMenu(self)
+        self.menu.show()
+        self.close()
+
 
     def registration(self):
         name = self.linen.text()
