@@ -659,8 +659,9 @@ class RedactForm(QWidget):
                         que += "WHERE name = ?"
                         cur.execute(que, (self.name,))
                     else:
-                        self.error = Error(self, 'Изменений по калориям и \nдругим харак. не произошло!')
-                        self.error.show()
+                        pass
+                        # self.error = Error(self, 'Изменений по калориям и \nдругим харак. не произошло!')
+                        # self.error.show()
                     self.connection.commit()
                     self.modified.clear()
                 
