@@ -823,7 +823,14 @@ class SecondForm(QMainWindow):
 
     def refresh_table(self):
         self.query = self.default
+        self.tableWidget.setSortingEnabled(False)
         self.select_data()
+
+        # Сортируем название и добавляем возможность сортировать всю таблицу
+        if self.tableWidget.rowCount() != 0:
+            # print('True1')
+            self.tableWidget.sortItems(0, order=0)
+            self.tableWidget.setSortingEnabled(True)
 
     def add_element(self):
         self.add_form = AddingForm(self, self.user)
@@ -851,6 +858,9 @@ class SecondForm(QMainWindow):
                 self.error.show()
 
     def find1_table(self):
+        # Отключаем сортировку для корректного вывода
+        self.tableWidget.setSortingEnabled(False)
+        
         # Создаём нужные переменные
         new_win = False
         fats, carbs, proteins, kaloris = '', '', '', ''
@@ -1001,6 +1011,9 @@ class SecondForm(QMainWindow):
         self.select_data()
 
     def find2_table(self):
+        # Отключаем сортировку для корректного вывода
+        self.tableWidget.setSortingEnabled(False)
+
         self.linek.setText('')
         self.linec.setText('')
         self.linep.setText('')
@@ -1023,7 +1036,6 @@ class SecondForm(QMainWindow):
             for el in ingredients:
                 for i in el[0].lower().split('; '):
                     for j in text:
-                        print(j, i)
                         if j in i:
                             accept_dish = True
                         else:
@@ -1032,8 +1044,6 @@ class SecondForm(QMainWindow):
                     if accept_dish:
                         id_ingredient = cur.execute("""SELECT id FROM receipt WHERE ingredients = ?""", (el[0],)).fetchone()
                         ids.append(id_ingredient[0])
-
-            print(set(ids))
             
             # Выводим нужные блюда
             if set(ids):
@@ -1079,6 +1089,10 @@ class SecondForm(QMainWindow):
         self.tableWidget.setColumnWidth(1, 164)
         self.tableWidget.setColumnWidth(2, 50)
         self.tableWidget.setHorizontalHeaderLabels(['Название', 'Калории', 'Белки', 'Жиры', 'Углеводы', 'Тип'])
+
+        # Сортируем название и добавляем возможность сортировать всю таблицу
+        self.tableWidget.setSortingEnabled(True)
+        self.tableWidget.sortItems(0, order=0)
 
 
 if __name__ == '__main__':

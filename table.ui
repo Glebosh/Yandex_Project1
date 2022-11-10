@@ -65,7 +65,7 @@
      <set>QAbstractItemView::NoEditTriggers</set>
     </property>
     <property name="sortingEnabled">
-     <bool>false</bool>
+     <bool>true</bool>
     </property>
    </widget>
    <widget class="QLabel" name="label">
