@@ -41,6 +41,7 @@ class EntryMenu(QWidget):
                 WHERE name = ?""", (name,)).fetchone()
 
                 if password == password_t[0]:
+                    # Ввод пользователя и вход в систему
                     self.user = cur.execute("""SELECT id FROM registration
                     WHERE name = ?""", (name,)).fetchone()
 
@@ -84,7 +85,9 @@ class Registration(QWidget):
     def registration(self):
         name = self.linen.text()
         password = self.linep.text()
+        password_2 = self.linep_2.text()
         cur = self.connection.cursor()
+        # Имена
         names = [i[0] for i in cur.execute("""SELECT name FROM registration""").fetchall()]
 
         # Проверка имени
@@ -115,16 +118,22 @@ class Registration(QWidget):
                 self.error = Error(self, 'В пароле не могут быть буквы\nтолько нижнего регистра!')
                 self.error.show()
             else:
-                # Добавление пользователя в db
-                cur.execute("""INSERT INTO registration(name, password)
-                VALUES(?, ?)""", (name, password))
-                self.connection.commit()
+                # Проверка повторения пароля
+                if password != password_2:
+                    self.error = Error(self, 'Введёные пароли не сходятся!')
+                    self.error.show()
+                else:
+                    # Добавление пользователя в db
+                    cur.execute("""INSERT INTO registration(name, password)
+                    VALUES(?, ?)""", (name, password))
+                    self.connection.commit()
 
-                self.user = cur.execute("""SELECT id FROM registration
-                WHERE name = ?""", (name,)).fetchone()
-                self.mainWin = SecondForm(self, self.user[0])
-                self.mainWin.show()
-                self.close()
+                    # Вход в систему
+                    self.user = cur.execute("""SELECT id FROM registration
+                    WHERE name = ?""", (name,)).fetchone()
+                    self.mainWin = SecondForm(self, self.user[0])
+                    self.mainWin.show()
+                    self.close()
 
 
 class DelForm(QWidget):
@@ -160,18 +169,20 @@ class DelForm(QWidget):
             user = self.connection.cursor().execute("""SELECT user FROM dishes
             WHERE name = ?""", (text,)).fetchone()
             if user[0] == self.user or self.user == '1' or self.user == 1:
+                # Запрос к id
                 id_receipt = cur.execute("""SELECT receipt FROM dishes
                     WHERE name = ?""", (text,)).fetchone()
                 id_dishes = cur.execute("""SELECT id FROM dishes
                     WHERE name = ?""", (text,)).fetchone()
 
+                # Проверка фотографии и её удаление
                 photo = cur.execute("""SELECT photo FROM receipt 
                     WHERE id = ?""", (id_receipt[0],)).fetchone()[0]
                 if photo:
                     need_file = f'{os.getcwd()}/Photos'
                     os.remove(f'{need_file}/{photo}')
                 
-                # Удаление нужных строк
+                # Удаление выбранных строк
                 cur.execute("""DELETE from receipt
                     WHERE id = ?""", (id_receipt[0],))
                 cur.execute("""DELETE from dishes
@@ -290,7 +301,7 @@ class AddingForm(QWidget):
         self.photo.show()
 
     def adding(self):
-        # Создаём нужные переменные\
+        # Создаём нужные переменные
         name_text = self.linean.text()
         ingr_text = self.linei.text()
         fats = self.linef.text()
@@ -504,6 +515,8 @@ class RedactForm(QWidget):
                     self.tableWidget.setColumnCount(0)
                 else:
                     self.tableWidget.setColumnCount(len(res[0]))
+
+                # Создание таблицы
                 self.titles = ['ID', 'kalori', 'protein', 'fats', 'carb']
                 self.tableWidget.setRowCount(0)
 
@@ -594,7 +607,7 @@ class RedactForm(QWidget):
                 self.error = Error(self, "Введено число или ничего, а не строка \nв ингредиентах!!!")
                 self.error.show()
             else:
-                # ids
+                # Запрос к id
                 cur = self.connection.cursor()
                 id_dish = cur.execute("""SELECT id FROM dishes WHERE name = ?""", (self.name,)).fetchone()
                 id_receipt = cur.execute("""SELECT id FROM receipt 
@@ -609,6 +622,7 @@ class RedactForm(QWidget):
                     name_file = ''
                     if not self.del_photo:
                         if self.photo:
+                            # Запрос к фотографии
                             photo = cur.execute("""SELECT photo FROM receipt 
                                 WHERE id = ?""", (id_receipt[0],)).fetchone()[0]
                             if photo:
@@ -683,10 +697,12 @@ class ChoiceForm(QWidget):
         self.connection = sqlite3.connect("food.db")
         cur = self.connection.cursor()
 
+        # Имя блюда
         for i in args:
             name = str(i)
         self.label_name.setText(f'Название: {name}')
         
+        # Вся информация по блюду(Характеристика, рецепт и тд.)
         dishes = cur.execute("""SELECT kalori, protein, fats, carb, receipt, id FROM dishes
         WHERE name = ?""", (name,)).fetchone()
 
@@ -732,12 +748,13 @@ class Error(QWidget):
         self.initUI(error_text)
 
     def initUI(self, error_text):
-        self.setGeometry(800, 300, 300, 100)
+        self.setGeometry(800, 300, 400, 100)
         self.setWindowTitle('Ошибка')
 
         self.lb = QLabel(self)
         # self.lb.resize(100, 50)
         self.lb.move(20, 30)
+        # Текст ошибки
         self.lb.setText(f'Ошибка: {error_text[-1]}')
 
 
@@ -783,7 +800,7 @@ class SecondForm(QMainWindow):
         self.btn_help.clicked.connect(self.help_form)
 
         # Задаём значения для таблиц
-        self.defualt = """SELECT
+        self.default = """SELECT
                 dishes.name,
                 dishes.kalori,
                 dishes.protein,
@@ -795,7 +812,7 @@ class SecondForm(QMainWindow):
             LEFT JOIN dishes ON dishes_type.id_dishes = dishes.id
             LEFT JOIN type ON dishes_type.id_type = type.id"""
 
-        self.query = self.defualt
+        self.query = self.default
 
         # Отображаем всю таблицу
         self.select_data()
@@ -805,7 +822,7 @@ class SecondForm(QMainWindow):
         self.help.show()
 
     def refresh_table(self):
-        self.query = self.defualt
+        self.query = self.default
         self.select_data()
 
     def add_element(self):
@@ -821,9 +838,11 @@ class SecondForm(QMainWindow):
         self.red_form.show()
 
     def choose_element(self):
+        # Создание диалога
         name, ok_pressed = QInputDialog.getText(self, "Введите блюда", 
                                                 "Название название блюда:")
         if ok_pressed:
+            # Открываем ChoiceForm, если блюдо есть в таблице
             if name in [i[0] for i in self.connection.cursor().execute("""SELECT name FROM dishes""").fetchall()]:
                 self.choice = ChoiceForm(self, name)
                 self.choice.show()
@@ -871,7 +890,7 @@ class SecondForm(QMainWindow):
 
             # Подбираем нужный поиск по таблице
             if self.item == 'Всё':
-                self.query = self.defualt
+                self.query = self.default
             else:
                 self.query = f"""SELECT
                     dishes.name,
@@ -906,27 +925,33 @@ class SecondForm(QMainWindow):
             need_c = -1
             need_p = -1
 
-            # Поиск подходящих значения для переменных
+            # Поиск подходящих значения для переменных и добавление их в characteristics
+            characteristics = []
             if kaloris:
                 need_k = making_num(kaloris, n=1)
+                characteristics.append(f'dishes.kalori = {need_k}')
 
             if carbs:
                 need_c = making_num(carbs, n=4)
+                characteristics.append(f'dishes.carb = {need_c}')
             
             if proteins:
                 need_p = making_num(proteins, n=2)
+                characteristics.append(f'dishes.protein = {need_p}')
 
             if fats:
                 need_f = making_num(fats, n=3)
+                characteristics.append(f'dishes.fats = {need_f}')
 
             # Поиск для таблицы, где выбран тип блюда и его доп. характеристики
             if self.item != 'Всё':
+                # Запрос к типу блюда, вывод всех id блюд с выбранным типом
                 item = cursor.execute("""SELECT id FROM type WHERE name = ?""", (self.item,)).fetchone()
                 items = [i[0] for i in cursor.execute("""SELECT id_type FROM dishes_type""").fetchall()]
                 if item[0] not in items:
-                    # print(items)
                     self.query = """"""
                 elif need_k == -1 and need_f == -1 and need_c == -1 and need_p == -1:
+                    # Поиск только по типу
                     self.query = f"""SELECT
                         dishes.name,
                         dishes.kalori,
@@ -940,6 +965,7 @@ class SecondForm(QMainWindow):
                     LEFT JOIN type ON dishes_type.id_type = type.id
                     WHERE type.name = '{self.item}'"""
                 else:
+                    # Поиск по типу и характеристикам из characteristics
                     self.query = f"""SELECT
                         dishes.name,
                         dishes.kalori,
@@ -951,12 +977,14 @@ class SecondForm(QMainWindow):
                         dishes_type
                     LEFT JOIN dishes ON dishes_type.id_dishes = dishes.id
                     LEFT JOIN type ON dishes_type.id_type = type.id
-                    WHERE type.name = '{self.item}' AND (dishes.kalori = {need_k} OR dishes.protein = {need_p} OR dishes.carb = {need_c} OR dishes.fats = {need_f})"""
+                    WHERE type.name = '{self.item}' AND {' AND '.join(characteristics)}"""
             else:
                 # Поиск для таблицы, где выбран только тип блюда
                 if need_k == -1 and need_f == -1 and need_c == -1 and need_p == -1:
-                    self.query = self.defualt
+                    # Выводим ВСЁ
+                    self.query = self.default
                 else:
+                    # Поиск только по характеристикам из characteristics
                     self.query = f"""SELECT
                         dishes.name,
                         dishes.kalori,
@@ -968,7 +996,7 @@ class SecondForm(QMainWindow):
                         dishes_type
                     LEFT JOIN dishes ON dishes_type.id_dishes = dishes.id
                     LEFT JOIN type ON dishes_type.id_type = type.id
-                    WHERE dishes.kalori = {need_k} OR dishes.protein = {need_p} OR dishes.carb = {need_c} OR dishes.fats = {need_f}"""
+                    WHERE {' AND '.join(characteristics)}"""
 
         self.select_data()
 
@@ -978,30 +1006,37 @@ class SecondForm(QMainWindow):
         self.linep.setText('')
         self.linef.setText('')
 
-        text = self.lineingr.text().lower().split(';')
+        text = self.lineingr.text().lower().split('; ')
 
         # Проверка на присутствие введёных значений
         if not text:
-            self.query = self.defualt
+            self.query = self.default
             self.select_data()
         else:
             # Ингредиенты всех блюд
             cur = self.connection.cursor()
             ingredients = cur.execute("""SELECT ingredients FROM receipt""").fetchall()
             ids = []
+            accept_dish = False
 
-            # Список нужных id
+            # Список нужных id (id блюд с выбранными ингредиентами)
             for el in ingredients:
                 for i in el[0].lower().split('; '):
                     for j in text:
-                        # Удаление лишних пробелов
-                        j = j.strip()
+                        print(j, i)
                         if j in i:
-                            id_ingredient = cur.execute("""SELECT id FROM receipt WHERE ingredients = ?""", (el[0],)).fetchone()
-                            ids.append(id_ingredient[0])
+                            accept_dish = True
+                        else:
+                            accept_dish = False
+                            break
+                    if accept_dish:
+                        id_ingredient = cur.execute("""SELECT id FROM receipt WHERE ingredients = ?""", (el[0],)).fetchone()
+                        ids.append(id_ingredient[0])
+
+            print(set(ids))
             
             # Выводим нужные блюда
-            if ids:
+            if set(ids):
                 find = []
                 for i in range(1, len(ids)):
                     find.append(f'OR dishes.receipt = {ids[i]}')
@@ -1025,6 +1060,7 @@ class SecondForm(QMainWindow):
     def select_data(self):
         # Создание таблицы
         res = list(set(self.connection.cursor().execute(self.query).fetchall()))
+        # print(self.tableWidget.isSortingEnabled())
 
         # Проверка на отсутствие элементов в res
         if not res:

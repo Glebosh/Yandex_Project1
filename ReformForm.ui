@@ -73,7 +73,7 @@
      <x>20</x>
      <y>140</y>
      <width>381</width>
-     <height>71</height>
+     <height>91</height>
     </rect>
    </property>
   </widget>
@@ -155,7 +155,7 @@
     <rect>
      <x>20</x>
      <y>470</y>
-     <width>101</width>
+     <width>121</width>
      <height>16</height>
     </rect>
    </property>
@@ -184,7 +184,7 @@
     </font>
    </property>
    <property name="text">
-    <string>(Нужно вводить элементы через ';' и пробел!)</string>
+    <string>(Нужно вводить элементы через ';'</string>
    </property>
   </widget>
   <widget class="QFrame" name="frame">
@@ -325,7 +325,7 @@
     <rect>
      <x>340</x>
      <y>500</y>
-     <width>41</width>
+     <width>51</width>
      <height>16</height>
     </rect>
    </property>
@@ -355,9 +355,9 @@
   <widget class="QCheckBox" name="checkBox">
    <property name="geometry">
     <rect>
-     <x>300</x>
+     <x>270</x>
      <y>470</y>
-     <width>111</width>
+     <width>131</width>
      <height>17</height>
     </rect>
    </property>
@@ -369,6 +369,24 @@
    </property>
    <property name="text">
     <string>Удалить Фото</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_6">
+   <property name="geometry">
+    <rect>
+     <x>180</x>
+     <y>550</y>
+     <width>111</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>10</pointsize>
+    </font>
+   </property>
+   <property name="text">
+    <string>и пробел!)</string>
    </property>
   </widget>
  </widget>

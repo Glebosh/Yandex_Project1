@@ -64,13 +64,16 @@
     <property name="editTriggers">
      <set>QAbstractItemView::NoEditTriggers</set>
     </property>
+    <property name="sortingEnabled">
+     <bool>false</bool>
+    </property>
    </widget>
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
       <x>780</x>
       <y>90</y>
-      <width>131</width>
+      <width>151</width>
       <height>16</height>
      </rect>
     </property>
@@ -90,7 +93,7 @@
      <rect>
       <x>800</x>
       <y>180</y>
-      <width>91</width>
+      <width>121</width>
       <height>16</height>
      </rect>
     </property>
@@ -111,7 +114,7 @@
       <x>760</x>
       <y>220</y>
       <width>161</width>
-      <height>80</height>
+      <height>82</height>
      </rect>
     </property>
     <layout class="QFormLayout" name="formLayout">
@@ -173,7 +176,7 @@
      <rect>
       <x>790</x>
       <y>330</y>
-      <width>111</width>
+      <width>141</width>
       <height>16</height>
      </rect>
     </property>
@@ -227,9 +230,9 @@
    <widget class="QLabel" name="label_9">
     <property name="geometry">
      <rect>
-      <x>740</x>
+      <x>720</x>
       <y>50</y>
-      <width>211</width>
+      <width>251</width>
       <height>21</height>
      </rect>
     </property>
@@ -302,7 +305,7 @@
       <rect>
        <x>210</x>
        <y>530</y>
-       <width>141</width>
+       <width>171</width>
        <height>16</height>
       </rect>
      </property>
@@ -329,7 +332,7 @@
       <rect>
        <x>240</x>
        <y>40</y>
-       <width>141</width>
+       <width>161</width>
        <height>21</height>
       </rect>
      </property>
@@ -390,7 +393,7 @@
       <string notr="true">background-color: rgb(255, 255, 255);</string>
      </property>
      <property name="text">
-      <string>Помошник</string>
+      <string>Помощник</string>
      </property>
     </widget>
    </widget>
@@ -454,9 +457,9 @@
    <widget class="QLabel" name="label_10">
     <property name="geometry">
      <rect>
-      <x>750</x>
+      <x>730</x>
       <y>520</y>
-      <width>211</width>
+      <width>241</width>
       <height>21</height>
      </rect>
     </property>
@@ -486,7 +489,7 @@
      <rect>
       <x>790</x>
       <y>560</y>
-      <width>101</width>
+      <width>131</width>
       <height>16</height>
      </rect>
     </property>
@@ -599,9 +602,9 @@
    <widget class="QLabel" name="label_12">
     <property name="geometry">
      <rect>
-      <x>750</x>
+      <x>730</x>
       <y>620</y>
-      <width>181</width>
+      <width>221</width>
       <height>20</height>
      </rect>
     </property>
@@ -614,7 +617,7 @@
      <rect>
       <x>760</x>
       <y>640</y>
-      <width>181</width>
+      <width>201</width>
       <height>20</height>
      </rect>
     </property>
