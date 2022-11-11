@@ -33,7 +33,7 @@
     </font>
    </property>
    <property name="text">
-    <string>Значение цифр типа:</string>
+    <string>-</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_2">
@@ -53,7 +53,7 @@
     </font>
    </property>
    <property name="text">
-    <string>1 - Печёное</string>
+    <string>-</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_3">
@@ -73,7 +73,7 @@
     </font>
    </property>
    <property name="text">
-    <string>2 - Вареное</string>
+    <string>-</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_4">
@@ -93,7 +93,7 @@
     </font>
    </property>
    <property name="text">
-    <string>3 - Жареное</string>
+    <string>-</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_5">
@@ -113,7 +113,7 @@
     </font>
    </property>
    <property name="text">
-    <string>4 - Другое</string>
+    <string>-</string>
    </property>
   </widget>
   <widget class="QFrame" name="frame">
@@ -189,8 +189,7 @@
     </font>
    </property>
    <property name="text">
-    <string>Поиск осуществляется по показанным
- характеристикам</string>
+    <string>-</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_7">
@@ -209,10 +208,7 @@
     </font>
    </property>
    <property name="text">
-    <string>Три основные кнопки: 'Добавить',' Удалить' и 'Изменить' 
- блюдо.
- Для ознакномления можете попробовать:
- добавить, изменить или удалить блюдо </string>
+    <string>-</string>
    </property>
   </widget>
   <widget class="QFrame" name="frame_4">

@@ -5,7 +5,7 @@ from PyQt5 import uic, QtGui
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QInputDialog, QVBoxLayout
 from PyQt5.QtWidgets import QMainWindow, QLabel, QTableWidget, QTableWidgetItem
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtGui import QPixmap, QColor
 
 
 class EntryMenu(QWidget):
@@ -764,6 +764,17 @@ class HelpForm(QWidget):
         uic.loadUi('HelpForm.ui', self)
         self.setWindowTitle('Помошник')
 
+        # Работа с txt(Запись в строки)
+        with open('helper.txt', encoding='utf8') as file:
+            data = file.readlines()
+            self.label.setText(data[0].rstrip('\n'))
+            self.label_2.setText(data[1].rstrip('\n'))
+            self.label_3.setText(data[2].rstrip('\n'))
+            self.label_4.setText(data[3].rstrip('\n'))
+            self.label_5.setText(data[4].rstrip('\n'))
+            self.label_6.setText(data[5].rstrip('\n'))
+            self.label_7.setText(data[6].rstrip('\n'))
+
 
 class SecondForm(QMainWindow):
     def __init__(self, *args):
@@ -817,6 +828,26 @@ class SecondForm(QMainWindow):
         # Отображаем всю таблицу
         self.select_data()
 
+        # Color Table
+        rows = self.connection.cursor().execute("""SELECT name, user FROM dishes""").fetchall()
+        if self.user != 1:
+            self.color_table(rows)
+
+    def color_table(self, rows):
+        self.tableWidget.setSortingEnabled(False)
+
+        # Вызываем функцию для выделения цветом блюд
+        for num, i in enumerate(rows):
+            if i[-1] == self.user:
+                self.color_row(num, QColor(204, 255, 229))
+            # print(i, num)
+        self.tableWidget.setSortingEnabled(True)
+
+    def color_row(self, row, color):
+        # Красим строки
+        for i in range(self.tableWidget.columnCount()):
+            self.tableWidget.item(row, i).setBackground(color)
+
     def help_form(self):
         self.help = HelpForm(self)
         self.help.show()
@@ -825,6 +856,11 @@ class SecondForm(QMainWindow):
         self.query = self.default
         self.tableWidget.setSortingEnabled(False)
         self.select_data()
+
+        # Color Table
+        rows = self.connection.cursor().execute("""SELECT name, user FROM dishes""").fetchall()
+        if self.user != 1:
+            self.color_table(rows)
 
         # Сортируем название и добавляем возможность сортировать всю таблицу
         if self.tableWidget.rowCount() != 0:
@@ -863,6 +899,7 @@ class SecondForm(QMainWindow):
         
         # Создаём нужные переменные
         new_win = False
+        rows = ''
         fats, carbs, proteins, kaloris = '', '', '', ''
 
         # Проверка на правельный ввод данных в QLineEdit
@@ -974,6 +1011,11 @@ class SecondForm(QMainWindow):
                     LEFT JOIN dishes ON dishes_type.id_dishes = dishes.id
                     LEFT JOIN type ON dishes_type.id_type = type.id
                     WHERE type.name = '{self.item}'"""
+
+                    rows = self.connection.cursor().execute(f"""SELECT dishes.name, dishes.user FROM dishes_type
+                    LEFT JOIN dishes ON dishes_type.id_dishes = dishes.id
+                    LEFT JOIN type ON dishes_type.id_type = type.id
+                    WHERE type.name = '{self.item}'""").fetchall()
                 else:
                     # Поиск по типу и характеристикам из characteristics
                     self.query = f"""SELECT
@@ -988,11 +1030,18 @@ class SecondForm(QMainWindow):
                     LEFT JOIN dishes ON dishes_type.id_dishes = dishes.id
                     LEFT JOIN type ON dishes_type.id_type = type.id
                     WHERE type.name = '{self.item}' AND {' AND '.join(characteristics)}"""
+
+                    rows = self.connection.cursor().execute(f"""SELECT dishes.name, dishes.user FROM dishes_type
+                    LEFT JOIN dishes ON dishes_type.id_dishes = dishes.id
+                    LEFT JOIN type ON dishes_type.id_type = type.id
+                    WHERE type.name = '{self.item}' AND {' AND '.join(characteristics)}""").fetchall()
             else:
                 # Поиск для таблицы, где выбран только тип блюда
                 if need_k == -1 and need_f == -1 and need_c == -1 and need_p == -1:
                     # Выводим ВСЁ
                     self.query = self.default
+
+                    rows = self.connection.cursor().execute("""SELECT name, user FROM dishes""").fetchall()
                 else:
                     # Поиск только по характеристикам из characteristics
                     self.query = f"""SELECT
@@ -1008,7 +1057,16 @@ class SecondForm(QMainWindow):
                     LEFT JOIN type ON dishes_type.id_type = type.id
                     WHERE {' AND '.join(characteristics)}"""
 
+                    rows = self.connection.cursor().execute(f"""SELECT dishes.name, dishes.user FROM dishes_type
+                    LEFT JOIN dishes ON dishes_type.id_dishes = dishes.id
+                    LEFT JOIN type ON dishes_type.id_type = type.id
+                    WHERE {' AND '.join(characteristics)}""").fetchall()
+
         self.select_data()
+
+        # Color Table
+        if self.user != 1:
+            self.color_table(rows)
 
     def find2_table(self):
         # Отключаем сортировку для корректного вывода
@@ -1020,6 +1078,7 @@ class SecondForm(QMainWindow):
         self.linef.setText('')
 
         text = self.lineingr.text().lower().split('; ')
+        rows = ''
 
         # Проверка на присутствие введёных значений
         if not text:
@@ -1062,10 +1121,17 @@ class SecondForm(QMainWindow):
                     LEFT JOIN dishes ON dishes_type.id_dishes = dishes.id
                     LEFT JOIN type ON dishes_type.id_type = type.id
                     WHERE dishes.receipt = {ids[0]} {' '.join(find)}"""
+
+                rows = self.connection.cursor().execute(f"""SELECT name, user FROM dishes
+                WHERE dishes.receipt = {ids[0]} {' '.join(find)}""").fetchall()
             else:
                 self.query = """"""
             
             self.select_data()
+
+            # Color Table
+            if self.user != 1:
+                self.color_table(rows)
 
     def select_data(self):
         # Создание таблицы
