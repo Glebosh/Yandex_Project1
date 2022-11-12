@@ -102,7 +102,10 @@ class Registration(QWidget):
             self.error.show()
         else:
             # Проверка пароля
-            if len(set(password)) <= 5:
+            if password == '':
+                self.error = Error(self, 'Введите пароль в основное поле!')
+                self.error.show()
+            elif len(set(password)) <= 5:
                 self.error = Error(self, 'Данный пароль не подходит по длине!')
                 self.error.show()
             elif password.isdigit():
@@ -119,7 +122,10 @@ class Registration(QWidget):
                 self.error.show()
             else:
                 # Проверка повторения пароля
-                if password != password_2:
+                if password_2 == '':
+                    self.error = Error(self, 'Ведите пароль в окно повторения!')
+                    self.error.show()
+                elif password != password_2:
                     self.error = Error(self, 'Введёные пароли не сходятся!')
                     self.error.show()
                 else:
