@@ -94,6 +94,9 @@ class Registration(QWidget):
         if name in names:
             self.error = Error(self, 'Данное имя уже существует.\nПридумайте другое!')
             self.error.show()
+        elif name == '':
+            self.error = Error(self, 'Введите имя пользователя!')
+            self.error.show()
         elif len(set(name)) <= 4:
             self.error = Error(self, 'Данное имя не подходит по количетсву \nнеповторяющихся символов!')
             self.error.show()
