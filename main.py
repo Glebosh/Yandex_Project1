@@ -903,6 +903,7 @@ class SecondForm(QMainWindow):
                 self.error.show()
 
     def find1_table(self):
+        self.lineingr.setText('')
         # Отключаем сортировку для корректного вывода
         self.tableWidget.setSortingEnabled(False)
         
@@ -1158,8 +1159,14 @@ class SecondForm(QMainWindow):
             self.tableWidget.setRowCount(
                 self.tableWidget.rowCount() + 1)
             for j, elem in enumerate(row):
+                if j != 0:
+                    item = QTableWidgetItem()
+                    item.setData(Qt.EditRole, elem)
+                else:
+                    item = QTableWidgetItem(elem)
+                
                 self.tableWidget.setItem(
-                    i, j, QTableWidgetItem(str(elem)))
+                    i, j, item)
 
         self.tableWidget.setColumnWidth(1, 164)
         self.tableWidget.setColumnWidth(2, 50)

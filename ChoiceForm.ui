@@ -54,7 +54,7 @@
     <string notr="true">background-color: rgb(221, 221, 221);</string>
    </property>
    <property name="text">
-    <string>----НИЧЕГО----</string>
+    <string>----НЕТ ФОТО----</string>
    </property>
    <property name="scaledContents">
     <bool>true</bool>
